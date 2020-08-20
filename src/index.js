@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import AutoGrid from './Plantillas/Menu';
+import IDE from './Plantillas/IDE';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <AutoGrid />
   </React.StrictMode>,
   document.getElementById('root')
 );
