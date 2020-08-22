@@ -2,7 +2,7 @@
   "name": "py1_compi2",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/Guillermo-O-C/py1_compi2_2020",
+  "homepage": "https://guillermo-o-c.github.io/py1_compi2_2020/",
   "dependencies": {
     "-": "0.0.1",
     "@material-ui/icons": "^4.9.1",
