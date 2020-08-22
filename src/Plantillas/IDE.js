@@ -1,18 +1,29 @@
 import React from 'react';
+import {UnControlled as CodeMirror} from 'react-codemirror2';
+/*
+var editor = CodeMirror.fromTextArea(document.getElementById("codigo"),{
+  lineNumbers: true,
+    matchBrackets: true,
+    mode: "text/x-csrc"
+});*/
 
-    import {Controlled as CodeMirror} from 'react-codemirror2';
- 
-    export default function IDE() {
+export default function IDE() {
 return(
-    <CodeMirror
-      value='hola'
-      options={{mode: 'xml',
-      theme: 'material',
-      lineNumbers: true}}
-      onBeforeChange={(editor, data, value) => {
-        this.setState({value});
-      }}
-      onChange={(editor, data, value) => {
-      }}
-    />);
+  <div>
+    <textarea id="codigo">
+      
+    </textarea>
+  </div>
+);
 }
+ /*<CodeMirror 
+  value=''
+  options={{
+      mode: 'javascript',
+      theme: 'yonce',
+      lineNumbers: true,
+      viewportMargin: Infinity
+  }}
+  onChange={(editor, data, value) => {
+  }}
+/>*/
