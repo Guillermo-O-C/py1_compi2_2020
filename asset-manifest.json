@@ -1,23 +1,26 @@
 {
   "files": {
     "main.css": "/Guillermo-O-C/py1_compi2_2020/static/css/main.5f361e03.chunk.css",
-    "main.js": "/Guillermo-O-C/py1_compi2_2020/static/js/main.9c5b63b0.chunk.js",
-    "main.js.map": "/Guillermo-O-C/py1_compi2_2020/static/js/main.9c5b63b0.chunk.js.map",
+    "main.js": "/Guillermo-O-C/py1_compi2_2020/static/js/main.3e4a3270.chunk.js",
+    "main.js.map": "/Guillermo-O-C/py1_compi2_2020/static/js/main.3e4a3270.chunk.js.map",
     "runtime-main.js": "/Guillermo-O-C/py1_compi2_2020/static/js/runtime-main.cdc30da8.js",
     "runtime-main.js.map": "/Guillermo-O-C/py1_compi2_2020/static/js/runtime-main.cdc30da8.js.map",
-    "static/js/2.1127a32c.chunk.js": "/Guillermo-O-C/py1_compi2_2020/static/js/2.1127a32c.chunk.js",
-    "static/js/2.1127a32c.chunk.js.map": "/Guillermo-O-C/py1_compi2_2020/static/js/2.1127a32c.chunk.js.map",
+    "static/css/2.c6d5feb1.chunk.css": "/Guillermo-O-C/py1_compi2_2020/static/css/2.c6d5feb1.chunk.css",
+    "static/js/2.9a005a0b.chunk.js": "/Guillermo-O-C/py1_compi2_2020/static/js/2.9a005a0b.chunk.js",
+    "static/js/2.9a005a0b.chunk.js.map": "/Guillermo-O-C/py1_compi2_2020/static/js/2.9a005a0b.chunk.js.map",
     "index.html": "/Guillermo-O-C/py1_compi2_2020/index.html",
-    "precache-manifest.70beec1c2f719e720118b66671baf954.js": "/Guillermo-O-C/py1_compi2_2020/precache-manifest.70beec1c2f719e720118b66671baf954.js",
+    "precache-manifest.bfda04211ea86be3f1b509204e0106f5.js": "/Guillermo-O-C/py1_compi2_2020/precache-manifest.bfda04211ea86be3f1b509204e0106f5.js",
     "service-worker.js": "/Guillermo-O-C/py1_compi2_2020/service-worker.js",
+    "static/css/2.c6d5feb1.chunk.css.map": "/Guillermo-O-C/py1_compi2_2020/static/css/2.c6d5feb1.chunk.css.map",
     "static/css/main.5f361e03.chunk.css.map": "/Guillermo-O-C/py1_compi2_2020/static/css/main.5f361e03.chunk.css.map",
-    "static/js/2.1127a32c.chunk.js.LICENSE.txt": "/Guillermo-O-C/py1_compi2_2020/static/js/2.1127a32c.chunk.js.LICENSE.txt",
+    "static/js/2.9a005a0b.chunk.js.LICENSE.txt": "/Guillermo-O-C/py1_compi2_2020/static/js/2.9a005a0b.chunk.js.LICENSE.txt",
     "static/media/logo.svg": "/Guillermo-O-C/py1_compi2_2020/static/media/logo.5d5d9eef.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.cdc30da8.js",
-    "static/js/2.1127a32c.chunk.js",
+    "static/css/2.c6d5feb1.chunk.css",
+    "static/js/2.9a005a0b.chunk.js",
     "static/css/main.5f361e03.chunk.css",
-    "static/js/main.9c5b63b0.chunk.js"
+    "static/js/main.3e4a3270.chunk.js"
   ]
 }
