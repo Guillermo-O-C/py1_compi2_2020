@@ -4,12 +4,13 @@
 %options case-sensitive
 
 %%
-
-"int" return 'R_INTEGER';
-"double" return 'R_DOUBLE';
+"number" return 'R_NUMBER';
 "boolean" return 'R_BOOLEAN';
-"char" return 'R_CHAR';
-"String" return 'R_STRING';
+"string" return 'R_STRING';
+"let" return 'R_LET';
+"const" return 'R_CONST';
+"console" return 'R_CONSOLE';
+"log" return 'R_LOG';
 "false" return 'R_FALSE';
 "true" return 'R_TRUE';
 "class" return 'R_CLASS';
@@ -26,11 +27,6 @@
 "for" return 'R_FOR';
 "void" return 'R_VOID';
 "return" return 'R_RETURN';
-"main" return 'R_MAIN';
-"System" return 'R_SYSTEM';
-"out" return 'R_OUT';
-"print" return 'R_PRINT';
-"println" return 'R_PRINTLN';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
 \'[^\"]?\' { yytext = yytext.substr(1, yyleng-2); return 'CARACTER';}
@@ -93,7 +89,8 @@
 %left 'MAS' 'MENOS'
 %left 'MULTIPLICACION' 'DIVISION'
 %left 'POTENCIA' 'MODULO'
-%left UMENOS 'NOT'
+%left 'NOT'
+%left UMENOS 
 
 %start ini
 
@@ -114,62 +111,7 @@ sentencias
 	| sentencia               { $$ = [$1]; }
 ;
 sentencia
-	: R_VOID IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE  {  $$ = instruccionesAPI.nuevaFuncion($1, $2, $4, $7); }
-	| R_VOID R_MAIN ABRIR_PARENTESIS CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE {$$ = instruccionesAPI.nuevoMain($6); } 
-	| R_INTEGER  declaracion_p { $$ = $2; currentType=$1;}
-	| R_DOUBLE  declaracion_p { $$ = $2; currentType=$1;}
-	| R_STRING  declaracion_p { $$ = $2; currentType=$1;}
-	| R_BOOLEAN  declaracion_p { $$ = $2; currentType=$1;}
-	| R_CHAR  declaracion_p { $$ = $2; currentType=$1;}
-;
-declaracion_p
-	: listaID  defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion( $0, $1, $2); }
-	| IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE  {$$ = instruccionesAPI.nuevaFuncion( $0, $1, $3, $6); }
-;
-listaID
-	:	IDENTIFICADOR listaID_P { $$ = instruccionesAPI.nuevaListaid($1, $2);}
-;
-listaID_P
-	: COMA IDENTIFICADOR listaID_P {$$ = instruccionesAPI.nuevaListaid($2, $3);}
-	| {$$="NM";}
-;
-parametros
-	: R_INTEGER IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($1, $2, $3); }
-	| R_DOUBLE IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($1, $2, $3);}
-	| R_STRING IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($1, $2, $3); }
-	| R_BOOLEAN IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($1, $2, $3); }
-	| R_CHAR IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($1, $2, $3); }
-	| { $$ = "NA"; }
-;
-parametros_p
-	: COMA R_INTEGER IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($2, $3, $4); }
-	| COMA R_DOUBLE IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($2, $3, $4);}
-	| COMA R_STRING IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($2, $3, $4);}
-	| COMA R_BOOLEAN IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($2, $3, $4);}
-	| COMA R_CHAR IDENTIFICADOR parametros_p { $$ = instruccionesAPI.nuevoParametro($2, $3, $4); }
-	| { $$ = "NM"; }
-;
-instrucciones
-	: instrucciones instruccion { $1.push($2); $$ = $1; }
-	| instruccion               { $$ = [$1]; }
-;
-instruccion
-   	: IDENTIFICADOR IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);}
-	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
-	| R_INTEGER listaID defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3); }
-	| R_DOUBLE listaID defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3);}
-	| R_STRING listaID defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3);}
-	| R_BOOLEAN listaID defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3); }
-	| R_CHAR listaID defincion_var PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3); }
-	| R_PRINT ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($3);}
-	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
-    | R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, $7, $10);}
-	| R_RETURN expresion PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| error  { console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column);	salida.push('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column); ArrayDeErrores.push({tipo:"sintáctico", linea:this._$.first_line, columna:this._$.first_column, descripcion: yytext});}
-;
-defincion_var
-	: IGUAL expresion { $$ = $2; }
-	| { $$ = "null"; }
+	: declaracion {$$=$1;}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -198,29 +140,28 @@ expresion
 	| R_FALSE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.FALSE); }
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
 ;
-elseIf
-	: R_ELSE elseIf_P { $$ = $2;}
-	| { $$ = "NELSE"; }	
+
+
+/* Definición de la gramática de Typescript*/
+
+declaracion
+	: R_LET IDENTIFICADOR definicion_tipo definicion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4, $3);}
+	| R_CONST IDENTIFICADOR definicion_tipo definicion_const PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4, $3);}
 ;
-elseIf_P
-	: R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE elseIf {$$ = instruccionesAPI.nuevoElseIf($3, $6, $8);}
-	| ABRIR_LLAVE instrucciones CERRAR_LLAVE {$$ =  instruccionesAPI.nuevoElse($2);}
+definicion
+	:IGUAL expresion {$$=$2;}
+	| {$$="undefined";}
 ;
-for_init	
-	: R_INTEGER IDENTIFICADOR IGUAL expresion PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4);}
-	| R_DOUBLE IDENTIFICADOR IGUAL expresion PUNTO_COMA { $$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4);}
-	| IDENTIFICADOR IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);} 
+definicion_const
+	: IGUAL expresion {$$=$2;}
+	| error { console.error('Error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column+' la declaración de un const tiene que ser inicializado.');	}
 ;
-for_change
-	: INCREMENTO {$$=$1;}
-	| DECREMENTO {$$=$1;}
-	| IGUAL expresion {$$=$2;}
+definicion_tipo
+	: DOS_PUNTOS tipo {$$=$2;}
+	| {$$="infer";}
 ;
-argumentos
-	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2);}
-	| {$$ = "NA";}
-;
-argumentos_P
-	: COMA expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($2, $3);}
-	| {$$ =  "NM";}
+tipo
+	: R_NUMBER {$$=$1;}
+	| R_STRING {$$=$1;}
+	| R_BOOLEAN {$$=$1;}
 ;
