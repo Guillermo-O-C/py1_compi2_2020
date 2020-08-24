@@ -13,7 +13,8 @@ var TIPO_VALOR = {
   CADENA: 'CADENA',
   CARACTER: 'CARACTER',
   TRUE: 'TRUE',
-  FALSE: 'FALSE'
+  FALSE: 'FALSE',
+  OBJETO: 'OBJETO'
 };
 var TIPO_OPERACION = {
   SUMA: 'SUMA',
@@ -66,7 +67,8 @@ var SENTENCIAS = {
 var TIPO_DATO = {
   NUMBER: 'NUMBER',
   BOOLEAN: 'BOOLEAN',
-  STRING: 'STRING'
+  STRING: 'STRING',
+  OBJETO: 'OBJETO'
 };
 var TIPO_VARIABLE = {
   LET: 'LET',
@@ -220,9 +222,52 @@ var instruccionesAPI = {
     return {
       sentencia: SENTENCIAS.DECLARACION,
       variable_type: Variable_Type(variable_type),
-      data_type: Data_Type(data_type),
+      data_type: Data_Type(data_type.tipo),
+      isArray: data_type.isArray,
       id: id,
       expresion: valor
+    };
+  },
+  nuevoObjeto: function nuevoObjeto(atributos) {
+    return {
+      tipo: TIPO_VALOR.OBJETO,
+      atributos: atributos
+    };
+  },
+  nuevoAtributo: function nuevoAtributo(id, data_type, next) {
+    return {
+      id: id,
+      data_type: Data_Type(data_type),
+      next: next
+    };
+  },
+  nuevaDimension: function nuevaDimension(next_dimension) {
+    return {
+      dimension: true,
+      next_dimension: next_dimension
+    };
+  },
+  nuevoTipo: function nuevoTipo(tipo, isArray) {
+    return {
+      tipo: tipo,
+      isArray: isArray
+    };
+  },
+  nuevoArray: function nuevoArray(dimension) {
+    return {
+      dimension: dimension
+    };
+  },
+  nuevosDatosDeDimension: function nuevosDatosDeDimension(datos, next_dimension) {
+    return {
+      datos: datos,
+      next_dimension: next_dimension
+    };
+  },
+  nuevoDato: function nuevoDato(dato, next_data) {
+    return {
+      dato: dato,
+      next_data: next_data
     };
   },
   nuevaAsignacion: function nuevaAsignacion(id, valor) {

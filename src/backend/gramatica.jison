@@ -89,8 +89,12 @@
 %left 'MAS' 'MENOS'
 %left 'MULTIPLICACION' 'DIVISION'
 %left 'POTENCIA' 'MODULO'
-%left 'NOT'
-%left UMENOS 
+%left UMENOS 'NOT'
+
+%nonassoc 'DECREMENTO' 'INCREMENTO'
+%nonassoc 'CERRAR_LLAVE' 'ABRIR_LLAVE'
+%nonassoc 'CERRAR_CORCHETE' 'ABRIR_CORCHETE'
+%nonassoc 'CERRAR_PARENTESIS' 'ABRIR_PARENTESIS'
 
 %start ini
 
@@ -139,6 +143,8 @@ expresion
 	| R_TRUE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.TRUE); }
 	| R_FALSE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.FALSE); }
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
+	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
+	| ABRIR_CORCHETE inner_values CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevosDatosDeDimension($2, "undefined"); }
 ;
 
 
@@ -146,12 +152,14 @@ expresion
 
 declaracion
 	: R_LET IDENTIFICADOR definicion_tipo definicion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4, $3);}
-	| R_CONST IDENTIFICADOR definicion_tipo definicion_const PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4, $3);}
+	| R_CONST IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $5, $3); console.log($4)}
+	| error PUNTO_COMA
 ;
 definicion
 	:IGUAL expresion {$$=$2;}
 	| {$$="undefined";}
 ;
+//por ahora no se usa aunque se buscará implementar ese manejo de error
 definicion_const
 	: IGUAL expresion {$$=$2;}
 	| error { console.error('Error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column+' la declaración de un const tiene que ser inicializado.');	}
@@ -161,7 +169,33 @@ definicion_tipo
 	| {$$="infer";}
 ;
 tipo
-	: R_NUMBER {$$=$1;}
-	| R_STRING {$$=$1;}
-	| R_BOOLEAN {$$=$1;}
+	: R_NUMBER declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
+	| R_STRING declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
+	| R_BOOLEAN declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
+;
+declarar_array
+	: ABRIR_CORCHETE CERRAR_CORCHETE declarar_array{$$=instruccionesAPI.nuevaDimension($3);}
+	| {$$=false;}
+;
+objeto
+	: ABRIR_LLAVE obj_atributos CERRAR_LLAVE {$$=$2;}
+	| ABRIR_LLAVE CERRAR_LLAVE {$$="NA";}
+;
+obj_atributos 
+	: IDENTIFICADOR definicion_tipo obj_atributos_pr {$$=instruccionesAPI.nuevoAtributo($1, $2, $3);}
+;
+obj_atributos_pr
+	: COMA obj_atributos {$$=$2;}
+	| {$$="NM";}
+;
+array
+	: ABRIR_CORCHETE inner_values CERRAR_CORCHETE array {$$=instruccionesAPI.nuevosDatosDeDimension($2, $4);}
+;
+inner_values
+	: expresion inner_values_pr {$$=instruccionesAPI.nuevoDato($1, $2);}
+	| {$$="NA";}
+;
+inner_values_pr
+	: COMA expresion inner_values_pr {$$=instruccionesAPI.nuevoDato($2, $3);}
+	| {$$="NM";}
 ;
