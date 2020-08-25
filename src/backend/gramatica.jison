@@ -144,7 +144,7 @@ expresion
 	| R_FALSE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.FALSE); }
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
 	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
-	| ABRIR_CORCHETE inner_values CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevosDatosDeDimension($2, "undefined"); }
+	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
 ;
 
 
@@ -188,8 +188,12 @@ obj_atributos_pr
 	: COMA obj_atributos {$$=$2;}
 	| {$$="NM";}
 ;
-array
-	: ABRIR_CORCHETE inner_values CERRAR_CORCHETE array {$$=instruccionesAPI.nuevosDatosDeDimension($2, $4);}
+arrays
+	: ABRIR_CORCHETE inner_values CERRAR_CORCHETE arrays_pr {$$=instruccionesAPI.nuevosDatosDeDimension($2, $4);}
+;
+arrays_pr
+	: COMA ABRIR_CORCHETE inner_values CERRAR_CORCHETE arrays_pr {$$=instruccionesAPI.nuevosDatosDeDimension($3, $5);}
+	| {$$="NM";}
 ;
 inner_values
 	: expresion inner_values_pr {$$=instruccionesAPI.nuevoDato($1, $2);}

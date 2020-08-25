@@ -68,7 +68,10 @@ var TIPO_DATO = {
   NUMBER: 'NUMBER',
   BOOLEAN: 'BOOLEAN',
   STRING: 'STRING',
-  OBJETO: 'OBJETO'
+  OBJETO: 'OBJETO',
+  VOID: 'VOID',
+  TYPES: 'TYPES',
+  ARRAY: 'ARRAY'
 };
 var TIPO_VARIABLE = {
   LET: 'LET',
@@ -255,6 +258,7 @@ var instruccionesAPI = {
   },
   nuevoArray: function nuevoArray(dimension) {
     return {
+      data_type: TIPO_DATO.ARRAY,
       dimension: dimension
     };
   },

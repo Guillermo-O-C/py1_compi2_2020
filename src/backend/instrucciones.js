@@ -60,7 +60,10 @@ const TIPO_DATO = {
     NUMBER: 'NUMBER',
     BOOLEAN: 'BOOLEAN',
     STRING: 'STRING',
-    OBJETO: 'OBJETO'
+    OBJETO: 'OBJETO',
+    VOID:'VOID',
+    TYPES:'TYPES',
+    ARRAY: 'ARRAY'
 };
 const TIPO_VARIABLE ={
     LET: 'LET',
@@ -207,6 +210,7 @@ const instruccionesAPI = {
     },
     nuevoArray: function(dimension){
         return{
+            data_type:TIPO_DATO.ARRAY,
             dimension:dimension
         };
     },
