@@ -68,7 +68,7 @@ const TIPO_DATO = {
 const TIPO_VARIABLE ={
     LET: 'LET',
     CONST: 'CONST'
-}
+};
 function nuevaOperacion(operandoIzq, OperandoDer, tipo) {
     return {
         operandoIzq: operandoIzq,
@@ -319,9 +319,17 @@ const instruccionesAPI = {
     }
 };
 
-module.exports.TIPO_OPERACION = TIPO_OPERACION;
-module.exports.SENTENCIAS = SENTENCIAS;
-module.exports.TIPO_VALOR = TIPO_VALOR;
-module.exports.instruccionesAPI = instruccionesAPI;
-module.exports.TIPO_DATO = TIPO_DATO;
-module.exports.TS = TS;
+const _TIPO_OPERACION = TIPO_OPERACION;
+export { _TIPO_OPERACION as TIPO_OPERACION };
+const _TIPO_VARIABLE = TIPO_VARIABLE;
+export { _TIPO_VARIABLE as TIPO_VARIABLE };
+const _SENTENCIAS = SENTENCIAS;
+export { _SENTENCIAS as SENTENCIAS };
+const _TIPO_VALOR = TIPO_VALOR;
+export { _TIPO_VALOR as TIPO_VALOR };
+const _instruccionesAPI = instruccionesAPI;
+export { _instruccionesAPI as instruccionesAPI };
+const _TIPO_DATO = TIPO_DATO;
+export { _TIPO_DATO as TIPO_DATO };
+const _TS = TS;
+export { _TS as TS };

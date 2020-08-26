@@ -1,5 +1,10 @@
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TS = exports.TIPO_DATO = exports.instruccionesAPI = exports.TIPO_VALOR = exports.SENTENCIAS = exports.TIPO_VARIABLE = exports.TIPO_OPERACION = void 0;
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -366,9 +371,17 @@ var instruccionesAPI = {
     };
   }
 };
-module.exports.TIPO_OPERACION = TIPO_OPERACION;
-module.exports.SENTENCIAS = SENTENCIAS;
-module.exports.TIPO_VALOR = TIPO_VALOR;
-module.exports.instruccionesAPI = instruccionesAPI;
-module.exports.TIPO_DATO = TIPO_DATO;
-module.exports.TS = TS;
+var _TIPO_OPERACION = TIPO_OPERACION;
+exports.TIPO_OPERACION = _TIPO_OPERACION;
+var _TIPO_VARIABLE = TIPO_VARIABLE;
+exports.TIPO_VARIABLE = _TIPO_VARIABLE;
+var _SENTENCIAS = SENTENCIAS;
+exports.SENTENCIAS = _SENTENCIAS;
+var _TIPO_VALOR = TIPO_VALOR;
+exports.TIPO_VALOR = _TIPO_VALOR;
+var _instruccionesAPI = instruccionesAPI;
+exports.instruccionesAPI = _instruccionesAPI;
+var _TIPO_DATO = TIPO_DATO;
+exports.TIPO_DATO = _TIPO_DATO;
+var _TS = TS;
+exports.TS = _TS;
