@@ -3,14 +3,14 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Fab from '@material-ui/core/Fab';
-import Tooltip from '@material-ui/core/Tooltip';
+import Button from '@material-ui/core/Button';
 import TranslateIcon from '@material-ui/icons/Translate';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import TableChartIcon from '@material-ui/icons/TableChart';
 import WebIcon from '@material-ui/icons/Web';
 import WarningIcon from '@material-ui/icons/Warning';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import Icon from '@material-ui/core/Icon';
 import {UnControlled as CodeMirror} from 'react-codemirror2'
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/lib/codemirror.css';
@@ -69,6 +69,8 @@ const useStyles = makeStyles((theme) => ({
   title: {
     marginLeft: theme.spacing(2),
     flex: 1,
+  },button: {
+    margin: theme.spacing(1),
   },
 }));
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -76,11 +78,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 export default function UI() {
   let entrada;
+  let consola;
   function analizar(entry) {
+    document.getElementById('consola').value="";
     let AST;
     try {
         AST = parser.parse(entry);
         console.log(JSON.stringify(AST, null, 2));
+        document.getElementById('consola').value=JSON.stringify(AST, null, 2);
         return AST;
     } catch (error) {
         console.log(error);
@@ -116,56 +121,84 @@ export default function UI() {
 
           </Paper>
           <CodeMirror  className={classes.cdm} 
-            value='var a =3;'
+            value=''
             options={{
                 mode: 'javascript',
                 theme: 'cobalt',
                 lineNumbers: true,
                 readOnly: true
             }}
-            onChange={(editor, data, value) => {
-            }}
+            onChange={(editor, data, value) => {            }}
         />
         </Grid>
         </Grid>
-      <Grid container spacing={1}>
+      <Grid container spacing={2}>
           <Grid item xs={6}>
             <Paper className={classes.paper}>CONSOLA</Paper>
-            <textarea disabled id="original" name="original" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75"}} ></textarea>
+            <textarea disabled id="consola" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75", color:"#ffff"}} ></textarea>
 
           </Grid> 
-            <Grid>
-        <Tooltip title="Ejecutar" aria-label="add" >
-        <Fab color="secondary" className={classes.absolute} onClick={()=>{analizar(entrada)}}>
-            <PlayArrowIcon/>
-        </Fab>
-        </Tooltip>
-        <Tooltip title="Traducir" aria-label="add">
-        <Fab color="secondary" className={classes.absolute2}>
-            <TranslateIcon/>
-          </Fab>
-        </Tooltip>
-        <Tooltip title="Tabla de Símbolos de Traudcción" aria-label="add">
-        <Fab color="secondary" className={classes.absolute3} onClick={handleClickOpen}>
-            <TableChartIcon/>
-          </Fab>
-        </Tooltip>
-        <Tooltip title="Errores de Traducción" aria-label="add">
-        <Fab color="secondary" className={classes.absolute4}>
-            <WarningIcon/>
-          </Fab>
-        </Tooltip>
-        <Tooltip title="Tabla de Símbolos de Ejecución" aria-label="add">
-        <Fab color="secondary" className={classes.absolute5}>
-            <WebIcon/>
-          </Fab>
-        </Tooltip>
-        <Tooltip title="Errores de Ejecución" aria-label="add">
-        <Fab color="secondary" className={classes.absolute6}>
-            <ErrorOutlineIcon/>
-          </Fab>
-        </Tooltip>
-        </Grid>
+          <Grid item xs={6}>
+              <div style={{height:'30%', marginTop:'10%', float:'inline-start', alignContent:'stretch'}}><Button
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          startIcon={<PlayArrowIcon />}
+          onClick={()=>{analizar(entrada)}}
+        >
+          Ejecutar
+        </Button>
+        <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={classes.button}
+              startIcon={<WebIcon />}
+              onClick={handleClickOpen}
+            >
+              Tabla de símbolos de ejecución
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={classes.button}
+              startIcon={<ErrorOutlineIcon />}
+            >
+              Errores de ejecución
+            </Button>
+        </div>
+              <div>
+              <Button
+          variant="contained"
+          color="secondary"
+          size="large"
+          className={classes.button}
+          startIcon={<TranslateIcon/>}
+        >
+          Traducir Programa
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          className={classes.button}
+          startIcon={<TableChartIcon />}
+        >
+          Tabla de Símbolos de traducción
+        </Button>
+              <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={classes.button}
+              startIcon={<WarningIcon />}
+            >
+              Errores de Traducción
+            </Button>
+            
+            </div>
+       </Grid>
       </Grid>
       <Dialog fullScreen open={open} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar className={classes.appBar}>

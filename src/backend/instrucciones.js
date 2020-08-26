@@ -63,7 +63,8 @@ const TIPO_DATO = {
     OBJETO: 'OBJETO',
     VOID:'VOID',
     TYPES:'TYPES',
-    ARRAY: 'ARRAY'
+    ARRAY: 'ARRAY',
+    TYPE: 'TYPE'
 };
 const TIPO_VARIABLE ={
     LET: 'LET',
@@ -139,17 +140,17 @@ class TS {
 }
 
 function Data_Type(tipo) {
+    console.log(tipo);
     if (tipo === "number") {
         return TIPO_DATO.NUMBER;
-    }
-    if (tipo === "boolean") {
+    }else if (tipo === "boolean") {
         return TIPO_DATO.BOOLEAN;
-    }
-    if (tipo === "string") {
+    }else if (tipo === "string") {
         return TIPO_DATO.STRING;
-    }
-    if (tipo === "void") {
+    }else if (tipo === "void") {
         return TIPO_DATO.VOID;
+    }else{
+        return tipo;
     }
 }
 function Variable_Type(tipo) {
@@ -174,6 +175,7 @@ const instruccionesAPI = {
         };
     },
     nuevaDeclaracion: function(variable_type, id, valor, data_type) {
+        console.log(data_type);
         return {
             sentencia: SENTENCIAS.DECLARACION,
             variable_type:Variable_Type(variable_type),
@@ -225,6 +227,13 @@ const instruccionesAPI = {
           dato:dato,
           next_data:next_data
       };  
+    },
+    nuevoType: function(id, atributos){
+        return{
+            data_type:TIPO_DATO.TYPE,
+            id:id,
+            atributos:atributos
+        };
     },
     nuevaAsignacion: function(id, valor) {
         return {

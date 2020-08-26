@@ -27,6 +27,10 @@
 "for" return 'R_FOR';
 "void" return 'R_VOID';
 "return" return 'R_RETURN';
+"push" return 'R_PUSH';
+"pop" return 'R_POP';
+"length" return 'R_LENGTH';
+"type" return 'R_TYPE';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
 \'[^\"]?\' { yytext = yytext.substr(1, yyleng-2); return 'CARACTER';}
@@ -116,6 +120,9 @@ sentencias
 ;
 sentencia
 	: declaracion {$$=$1;}
+	| type {$$=$1;}
+	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
+	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($3);}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -166,12 +173,13 @@ definicion_const
 ;
 definicion_tipo
 	: DOS_PUNTOS tipo {$$=$2;}
-	| {$$="infer";}
+	| {$$={tipo:"infer"};}
 ;
 tipo
 	: R_NUMBER declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
 	| R_STRING declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
 	| R_BOOLEAN declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
+	| IDENTIFICADOR declarar_array { $$ = instruccionesAPI.nuevoTipo($1, $2);}
 ;
 declarar_array
 	: ABRIR_CORCHETE CERRAR_CORCHETE declarar_array{$$=instruccionesAPI.nuevaDimension($3);}
@@ -188,18 +196,23 @@ obj_atributos_pr
 	: COMA obj_atributos {$$=$2;}
 	| {$$="NM";}
 ;
+//try
 arrays
-	: ABRIR_CORCHETE inner_values CERRAR_CORCHETE arrays_pr {$$=instruccionesAPI.nuevosDatosDeDimension($2, $4);}
-;
-arrays_pr
-	: COMA ABRIR_CORCHETE inner_values CERRAR_CORCHETE arrays_pr {$$=instruccionesAPI.nuevosDatosDeDimension($3, $5);}
-	| {$$="NM";}
-;
-inner_values
-	: expresion inner_values_pr {$$=instruccionesAPI.nuevoDato($1, $2);}
+	:  expresion arrays_pr {$$=instruccionesAPI.nuevoDato($1, $2);}
 	| {$$="NA";}
 ;
-inner_values_pr
-	: COMA expresion inner_values_pr {$$=instruccionesAPI.nuevoDato($2, $3);}
+arrays_pr
+	: COMA expresion arrays_pr {$$=instruccionesAPI.nuevoDato($2, $3);}
 	| {$$="NM";}
+;
+type
+	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE obj_atributos CERRAR_LLAVE CERRAR_LLAVE {$$=instruccionesAPI.nuevoType($2,$5);}
+;
+elseIf
+	: R_ELSE elseIf_P { $$ = $2;}
+	| { $$ = "NELSE"; }	
+;
+elseIf_P
+	: R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf {$$ = instruccionesAPI.nuevoElseIf($3, $6, $8);}
+	| ABRIR_LLAVE sentencias CERRAR_LLAVE {$$ =  instruccionesAPI.nuevoElse($2);}
 ;
