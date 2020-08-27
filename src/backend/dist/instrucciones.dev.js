@@ -77,7 +77,8 @@ var TIPO_DATO = {
   VOID: 'VOID',
   TYPES: 'TYPES',
   ARRAY: 'ARRAY',
-  TYPE: 'TYPE'
+  TYPE: 'TYPE',
+  OPERADOR_TERNARIO: 'OPERADOR_TERNARIO'
 };
 var TIPO_VARIABLE = {
   LET: 'LET',
@@ -267,12 +268,6 @@ var instruccionesAPI = {
       dimension: dimension
     };
   },
-  nuevosDatosDeDimension: function nuevosDatosDeDimension(datos, next_dimension) {
-    return {
-      datos: datos,
-      next_dimension: next_dimension
-    };
-  },
   nuevoDato: function nuevoDato(dato, next_data) {
     return {
       dato: dato,
@@ -284,6 +279,14 @@ var instruccionesAPI = {
       data_type: TIPO_DATO.TYPE,
       id: id,
       atributos: atributos
+    };
+  },
+  nuevoOperadorTernario: function nuevoOperadorTernario(condicion, result1, result2) {
+    return {
+      data_type: TIPO_DATO.OPERADOR_TERNARIO,
+      condicion: condicion,
+      result1: result1,
+      result2: result2
     };
   },
   nuevaAsignacion: function nuevaAsignacion(id, valor) {
@@ -319,6 +322,27 @@ var instruccionesAPI = {
     return {
       sentencia: SENTENCIAS.ELSE,
       accion: sentencias
+    };
+  },
+  nuevoSwitch: function nuevoSwitch(logica, cases) {
+    return {
+      sentencia: SENTENCIAS.SWITCH,
+      logica: logica,
+      cases: cases
+    };
+  },
+  nuevoCase: function nuevoCase(condicion, accion, next_case) {
+    return {
+      condicion: condicion,
+      accion: accion,
+      next_case: next_case
+    };
+  },
+  nuevoDefault: function nuevoDefault(accion) {
+    return {
+      condicion: 'default',
+      accion: accion //podía llevar casos después pero aún no lo he hecho
+
     };
   },
   nuevoFor: function nuevoFor(inicial, _final, paso, sentencias) {

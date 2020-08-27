@@ -68,6 +68,7 @@
 ":" return 'DOS_PUNTOS';
 "." return 'PUNTO';
 "," return 'COMA';
+"?" return 'OPERADOR_TERNARIO';
 
 <<EOF>>                 return 'EOF';
 
@@ -87,7 +88,7 @@
 %}
 
 /* Asociación de operadores y precedencia */
-
+%left 'OPERADOR_TERNARIO'
 %left 'AND' 'OR'
 %left 'IGUALDAD' 'MENOR' 'MENOR_IGUAL' 'MAYOR' 'MAYOR_IGUAL' 'DISTINTO'
 %left 'MAS' 'MENOS'
@@ -122,7 +123,8 @@ sentencia
 	: declaracion {$$=$1;}
 	| type {$$=$1;}
 	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
-	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($3);}
+	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($5);}
+	| R_SWITCH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE cases CERRAR_LLAVE {$$=instruccionesAPI.nuevoSwitch($3, $6);}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -152,6 +154,7 @@ expresion
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
 	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
 	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
+	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
 ;
 
 
@@ -206,7 +209,7 @@ arrays_pr
 	| {$$="NM";}
 ;
 type
-	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE obj_atributos CERRAR_LLAVE CERRAR_LLAVE {$$=instruccionesAPI.nuevoType($2,$5);}
+	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE obj_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
 ;
 elseIf
 	: R_ELSE elseIf_P { $$ = $2;}
@@ -215,4 +218,9 @@ elseIf
 elseIf_P
 	: R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf {$$ = instruccionesAPI.nuevoElseIf($3, $6, $8);}
 	| ABRIR_LLAVE sentencias CERRAR_LLAVE {$$ =  instruccionesAPI.nuevoElse($2);}
+;
+cases
+	: R_CASE expresion DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE cases {$$=instruccionesAPI.nuevoCase($2, $5, $7);} 
+	| R_DEFAULT DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoDefault($4);}
+	| {$$="NA";}
 ;

@@ -64,7 +64,8 @@ const TIPO_DATO = {
     VOID:'VOID',
     TYPES:'TYPES',
     ARRAY: 'ARRAY',
-    TYPE: 'TYPE'
+    TYPE: 'TYPE',
+    OPERADOR_TERNARIO: 'OPERADOR_TERNARIO'
 };
 const TIPO_VARIABLE ={
     LET: 'LET',
@@ -216,12 +217,6 @@ const instruccionesAPI = {
             dimension:dimension
         };
     },
-    nuevosDatosDeDimension: function(datos, next_dimension) {
-        return {
-            datos: datos,
-            next_dimension: next_dimension
-        };
-    },
     nuevoDato: function (dato, next_data) {
       return{
           dato:dato,
@@ -233,6 +228,14 @@ const instruccionesAPI = {
             data_type:TIPO_DATO.TYPE,
             id:id,
             atributos:atributos
+        };
+    },
+    nuevoOperadorTernario:function(condicion, result1, result2){
+        return{
+            data_type:TIPO_DATO.OPERADOR_TERNARIO,
+            condicion:condicion,
+            result1:result1,
+            result2:result2
         };
     },
     nuevaAsignacion: function(id, valor) {
@@ -268,6 +271,27 @@ const instruccionesAPI = {
         return {
             sentencia: SENTENCIAS.ELSE,
             accion: sentencias
+        };
+    },
+    nuevoSwitch: function(logica, cases){
+        return{
+            sentencia:SENTENCIAS.SWITCH,
+            logica:logica,
+            cases:cases
+        };
+    },
+    nuevoCase: function(condicion, accion, next_case){
+        return{
+            condicion:condicion,
+            accion:accion,
+            next_case:next_case
+        };
+    },
+    nuevoDefault: function(accion){
+        return{
+            condicion:'default',
+            accion:accion
+            //podía llevar casos después pero aún no lo he hecho
         };
     },
     nuevoFor: function(inicial, final, paso, sentencias) {
