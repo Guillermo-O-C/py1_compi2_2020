@@ -308,10 +308,11 @@ var instruccionesAPI = {
       result2: result2
     };
   },
-  nuevaAsignacion: function nuevaAsignacion(id, valor) {
+  nuevaAsignacion: function nuevaAsignacion(id, ArrayPosition, valor) {
     return {
       sentencia: SENTENCIAS.ASIGNACION,
       id: id,
+      ArrayPosition: ArrayPosition,
       expresion: valor
     };
   },
@@ -443,6 +444,18 @@ var instruccionesAPI = {
     return {
       sentencia: SENTENCIAS.RETURN,
       valor: valor
+    };
+  },
+  nuevoArrayIndex: function nuevoArrayIndex(index, next_index) {
+    return {
+      index: index,
+      next_index: next_index
+    };
+  },
+  nuevoAccesoAPosicion: function nuevoAccesoAPosicion(index, next_index) {
+    return {
+      index: index,
+      next_index: next_index
     };
   }
 };

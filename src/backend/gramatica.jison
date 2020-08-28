@@ -45,9 +45,9 @@
 "--" return 'DECREMENTO';
 "+" return "MAS";
 "-" return 'MENOS';
+"**" return 'POTENCIA';
 "*" return 'MULTIPLICACION';
 "/" return 'DIVISION';
-"^" return 'POTENCIA';
 "%" return 'MODULO';
 "==" return 'IGUALDAD';
 "!=" return 'DISTINTO';
@@ -132,6 +132,9 @@ instruccion
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
 	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9); }
+	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
+	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
+	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2, $4);}
 ;
 
 sentencias
@@ -149,6 +152,9 @@ sentencia
 	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
+	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
+	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
+	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -179,6 +185,15 @@ expresion
 	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
 	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
 	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
+	| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE nuevoArrayIndex {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
+;
+argumentos
+	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2);}
+	| {$$ = "NA";}
+;
+argumentos_P
+	: COMA expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($2, $3);}
+	| {$$ =  "NM";}
 ;
 /* Definición de la gramática de Typescript*/
 
@@ -281,6 +296,14 @@ parametros_pr
 opcional
 	: OPERADOR_TERNARIO {$$=true;}
 	| {$$=false;}
+;
+retorno
+	: expresion {$$=$1;}
+	| {$$="NA";}
+;
+array_position
+	: ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoArrayIndex($2, $4);}
+	| {$$="false";}
 ;
 /*
 Gramáticac para las funciones anónimas
