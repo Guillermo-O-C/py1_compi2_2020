@@ -6,7 +6,8 @@ const TIPO_VALOR = {
     CARACTER: 'CARACTER',
     TRUE: 'TRUE',
     FALSE: 'FALSE',
-    OBJETO: 'OBJETO'
+    OBJETO: 'OBJETO',
+    ANONYMOUS_FUNCTION: 'ANONYMOUS_FUNCTION'
 };
 const TIPO_OPERACION = {
     SUMA: 'SUMA',
@@ -54,7 +55,9 @@ const SENTENCIAS = {
     DEFAULT: 'DEFAULT',
     LLAMADA: 'LLAMADA',
     INCREMENTO: 'INCREMENTO',
-    DECREMENTO: 'DECREMENTO'
+    DECREMENTO: 'DECREMENTO',
+    FOR_OF:'FOR_OF',
+    FOR_IN:'FOR_IN'
 };
 const TIPO_DATO = {
     NUMBER: 'NUMBER',
@@ -175,16 +178,25 @@ const instruccionesAPI = {
             valor: valor
         };
     },
-    nuevaDeclaracion: function(variable_type, id, valor, data_type) {
-        console.log(data_type);
+    nuevaDeclaracion: function(variable_type, id, data_type, valor, next_declaration) {
         return {
             sentencia: SENTENCIAS.DECLARACION,
             variable_type:Variable_Type(variable_type),
             data_type: Data_Type(data_type.tipo),
             isArray:data_type.isArray,
             id: id,
-            expresion: valor
+            expresion: valor,
+            next_declaration:next_declaration
         };
+    },
+    nuevoID:function( id, data_type, valor,  next_declaration){
+      return{
+        data_type: Data_Type(data_type.tipo),
+        isArray:data_type.isArray,
+        id: id,
+        expresion: valor,
+        next_declaration:next_declaration
+      };  
     },
     nuevoObjeto:function(atributos){
         return{
@@ -192,7 +204,14 @@ const instruccionesAPI = {
             atributos:atributos
         };
     },
-    nuevoAtributo:function(id, data_type, next){
+    nuevoObjAtributo:function(id, valor, next){
+        return{
+            id:id,
+            valor:valor,
+            next:next
+        };
+    },
+    nuevoTypeAtributo:function(id, data_type, next){
         return{
             id:id,
             data_type:Data_Type(data_type),
@@ -230,10 +249,10 @@ const instruccionesAPI = {
             atributos:atributos
         };
     },
-    nuevoOperadorTernario:function(condicion, result1, result2){
+    nuevoOperadorTernario:function(logica, result1, result2){
         return{
             data_type:TIPO_DATO.OPERADOR_TERNARIO,
-            condicion:condicion,
+            logica:logica,
             result1:result1,
             result2:result2
         };
@@ -280,16 +299,16 @@ const instruccionesAPI = {
             cases:cases
         };
     },
-    nuevoCase: function(condicion, accion, next_case){
+    nuevoCase: function(logica, accion, next_case){
         return{
-            condicion:condicion,
+            logica:logica,
             accion:accion,
             next_case:next_case
         };
     },
     nuevoDefault: function(accion){
         return{
-            condicion:'default',
+            logica:'default',
             accion:accion
             //podía llevar casos después pero aún no lo he hecho
         };
@@ -303,12 +322,36 @@ const instruccionesAPI = {
             accion: sentencias
         };
     },
-    nuevoMain: function(sentencias) {
-        return {
-            sentencia: SENTENCIAS.MAIN,
-            accion: sentencias
+    nuevoForOF:function(variable,conjunto,  accion){
+        return{
+            sentencia:SENTENCIAS.FOR_OF,
+            conjunto:conjunto,
+            variable:variable,
+            accion:accion
         };
     },
+    nuevoForIn:function(variable,conjunto,  accion){
+        return{
+            sentencia:SENTENCIAS.FOR_IN,
+            conjunto:conjunto,
+            variable:variable,
+            accion:accion
+        };
+    },
+    nuevoWhile:function(logica, accion){
+      return{
+          sentencia:SENTENCIAS.WHILE,
+          logica:logica,
+          accion:accion
+      };  
+    },
+    nuevoDoWhile:function(accion, logica){
+        return{
+            sentencia:SENTENCIAS.DO_WHILE,
+            logica:logica,
+            accion:accion
+        };  
+      },
     nuevaFuncion: function(tipo, id, parametros, accion) {
         return {
             sentencia: SENTENCIAS.FUNCION,
@@ -337,11 +380,12 @@ const instruccionesAPI = {
             siguiente: siguiente
         };
     },
-    nuevoParametro: function(tipo, id, siguiente) {
+    nuevoParametro: function(tipo, id, siguiente, opcional) {
         return {
             tipo: Data_Type(tipo),
             id: id,
-            siguiente: siguiente
+            siguiente: siguiente,
+            opcional:opcional
         };
     },
     nuevoReturn: function(valor) {

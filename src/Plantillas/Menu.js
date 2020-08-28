@@ -28,6 +28,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import CloseIcon from '@material-ui/icons/Close';
 import Slide from '@material-ui/core/Slide';
+import Traducir from '../backend/Traductor';
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -78,7 +79,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 export default function UI() {
   let entrada;
-  let consola;
+  let salida;
   function analizar(entry) {
     document.getElementById('consola').value="";
     let AST;
@@ -92,6 +93,12 @@ export default function UI() {
         return error;
     }
   } 
+  function Translate(){
+    Traducir(analizar(entrada), document.getElementById('consola'));
+  }
+  function translationConsole(editor){
+    salida=editor;
+  }
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const handleClickOpen = () => {
@@ -129,6 +136,7 @@ export default function UI() {
                 readOnly: true
             }}
             onChange={(editor, data, value) => {            }}
+            editorDidMount={(editor)=>translationConsole(editor)}
         />
         </Grid>
         </Grid>
@@ -175,6 +183,7 @@ export default function UI() {
           size="large"
           className={classes.button}
           startIcon={<TranslateIcon/>}
+          onClick={()=>{Translate()}}
         >
           Traducir Programa
         </Button>

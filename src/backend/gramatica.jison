@@ -13,8 +13,6 @@
 "log" return 'R_LOG';
 "false" return 'R_FALSE';
 "true" return 'R_TRUE';
-"class" return 'R_CLASS';
-"import" return 'R_IMPORT';
 "if" return 'R_IF';
 "else" return 'R_ELSE';
 "switch" return 'R_SWITCH';
@@ -31,6 +29,9 @@
 "pop" return 'R_POP';
 "length" return 'R_LENGTH';
 "type" return 'R_TYPE';
+"of" return 'R_OF';
+"in" return 'R_IN';
+"function" return 'R_FUNCTION';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
 \'[^\"]?\' { yytext = yytext.substr(1, yyleng-2); return 'CARACTER';}
@@ -106,7 +107,7 @@
 %% /* Definición de la gramática */
 
 ini
-	: sentencias EOF {
+	: instrucciones EOF {
 		// cuado se haya reconocido la entrada completa retornamos el AST
 		var temporal = salida;
 		salida=[];
@@ -115,6 +116,24 @@ ini
 		return {AST: $1, Errores: temporal};
 	}
 ;
+instrucciones
+	: instrucciones instruccion  { $1.push($2); $$ = $1; }
+	| instruccion {$$=[$1];}
+;
+instruccion
+	: declaracion {$$=$1;}
+	| type {$$=$1;}
+	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
+	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($5);}
+	| R_SWITCH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE cases CERRAR_LLAVE {$$=instruccionesAPI.nuevoSwitch($3, $6);}
+	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, $7, $10);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_OF IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForOF($4, $6, $9);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
+	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
+	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
+	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9); }
+;
+
 sentencias
 	: sentencias sentencia { $1.push($2); $$ = $1; }
 	| sentencia               { $$ = [$1]; }
@@ -125,6 +144,11 @@ sentencia
 	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
 	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($5);}
 	| R_SWITCH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE cases CERRAR_LLAVE {$$=instruccionesAPI.nuevoSwitch($3, $6);}
+	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, $7, $10);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_OF IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForOF($4, $6, $9);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
+	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
+	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -156,14 +180,20 @@ expresion
 	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
 	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
 ;
-
-
 /* Definición de la gramática de Typescript*/
 
 declaracion
-	: R_LET IDENTIFICADOR definicion_tipo definicion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $4, $3);}
-	| R_CONST IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $5, $3); console.log($4)}
+	: R_LET IDENTIFICADOR definicion_tipo definicion listaID PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $4, $5);}
+	| R_CONST IDENTIFICADOR definicion_tipo IGUAL expresion listaIDConst PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $5, $6);}
 	| error PUNTO_COMA
+;
+listaID
+	: COMA IDENTIFICADOR definicion_tipo definicion listaID {$$=instruccionesAPI.nuevoID($2,$3, $4,$5);}
+	| {$$="NM";}
+;
+listaIDConst
+	: COMA IDENTIFICADOR definicion_tipo IGUAL expresion listaID {$$=instruccionesAPI.nuevoID($2, $3, $5, $6);}
+	| {$$="NM";}
 ;
 definicion
 	:IGUAL expresion {$$=$2;}
@@ -176,7 +206,7 @@ definicion_const
 ;
 definicion_tipo
 	: DOS_PUNTOS tipo {$$=$2;}
-	| {$$={tipo:"infer"};}
+	| {$$={tipo:"infer", isArray:"undefinied"};}
 ;
 tipo
 	: R_NUMBER declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
@@ -193,7 +223,7 @@ objeto
 	| ABRIR_LLAVE CERRAR_LLAVE {$$="NA";}
 ;
 obj_atributos 
-	: IDENTIFICADOR definicion_tipo obj_atributos_pr {$$=instruccionesAPI.nuevoAtributo($1, $2, $3);}
+	: IDENTIFICADOR DOS_PUNTOS expresion obj_atributos_pr {$$=instruccionesAPI.nuevoObjAtributo($1, $3, $4);}
 ;
 obj_atributos_pr
 	: COMA obj_atributos {$$=$2;}
@@ -209,7 +239,14 @@ arrays_pr
 	| {$$="NM";}
 ;
 type
-	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE obj_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
+	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE type_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
+;
+type_atributos 
+	: IDENTIFICADOR definicion_tipo type_atributos_pr {$$=instruccionesAPI.nuevoTypeAtributo($1, $2, $3);}
+;
+type_atributos_pr
+	: COMA type_atributos {$$=$2;}
+	| {$$="NM";}
 ;
 elseIf
 	: R_ELSE elseIf_P { $$ = $2;}
@@ -224,3 +261,30 @@ cases
 	| R_DEFAULT DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoDefault($4);}
 	| {$$="NA";}
 ;
+for_init	
+	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $5, $3);}
+	| IDENTIFICADOR IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);} 
+;
+for_change
+	: INCREMENTO {$$=$1;}
+	| DECREMENTO {$$=$1;}
+	| IGUAL expresion {$$=$2;}
+;
+parametros
+	: IDENTIFICADOR definicion_tipo parametros_pr {$$=instruccionesAPI.nuevoParametro($2, $1, $3);}
+	| {$$="NA";}
+;
+parametros_pr
+	: COMA IDENTIFICADOR  definicion_tipo parametros_pr {$$=instruccionesAPI.nuevoParametro($3, $2, $4);}
+	| {$$="NM";}
+;
+opcional
+	: OPERADOR_TERNARIO {$$=true;}
+	| {$$=false;}
+;
+/*
+Gramáticac para las funciones anónimas
+funcion
+	: R_FUNCTION ABRIR_PARENTESIS parametros CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE {$$=instruccionesAPI.nuevaFuncion($-1);}
+;
+*/
