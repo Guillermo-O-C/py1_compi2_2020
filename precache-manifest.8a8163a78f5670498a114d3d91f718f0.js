@@ -1,27 +1,27 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "92bae3cf4183a6f97638912f8e98c9db",
+    "revision": "1c489f40de5533962db514a9e5193730",
     "url": "/py1_compi2_2020/index.html"
   },
   {
-    "revision": "3a3b64b5fbcc5d672baa",
+    "revision": "537b6f54c25e42e7c530",
     "url": "/py1_compi2_2020/static/css/2.76e7acc1.chunk.css"
   },
   {
-    "revision": "07543e8787616389c2b3",
+    "revision": "6a2ee5dab5d545f50851",
     "url": "/py1_compi2_2020/static/css/main.5f361e03.chunk.css"
   },
   {
-    "revision": "3a3b64b5fbcc5d672baa",
-    "url": "/py1_compi2_2020/static/js/2.3697fc59.chunk.js"
+    "revision": "537b6f54c25e42e7c530",
+    "url": "/py1_compi2_2020/static/js/2.e1246c3e.chunk.js"
   },
   {
     "revision": "0749163b59fbee32225059cb60c18af6",
-    "url": "/py1_compi2_2020/static/js/2.3697fc59.chunk.js.LICENSE.txt"
+    "url": "/py1_compi2_2020/static/js/2.e1246c3e.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "07543e8787616389c2b3",
-    "url": "/py1_compi2_2020/static/js/main.edaa6f1a.chunk.js"
+    "revision": "6a2ee5dab5d545f50851",
+    "url": "/py1_compi2_2020/static/js/main.281798cb.chunk.js"
   },
   {
     "revision": "c8f276ef5dedb27f69dd",
