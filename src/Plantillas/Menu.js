@@ -94,7 +94,7 @@ export default function UI() {
     }
   } 
   function Translate(){
-    Traducir(analizar(entrada), document.getElementById('consola'));
+    Traducir(analizar(entrada), document.getElementById('consola'), salida);
   }
   function translationConsole(editor){
     salida=editor;
@@ -133,7 +133,8 @@ export default function UI() {
                 mode: 'javascript',
                 theme: 'cobalt',
                 lineNumbers: true,
-                readOnly: true
+                readOnly: true,
+                indentAutoShift:true
             }}
             onChange={(editor, data, value) => {            }}
             editorDidMount={(editor)=>translationConsole(editor)}

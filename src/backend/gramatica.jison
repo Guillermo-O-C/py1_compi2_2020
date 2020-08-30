@@ -34,7 +34,8 @@
 "function" return 'R_FUNCTION';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
-\'[^\"]?\' { yytext = yytext.substr(1, yyleng-2); return 'CARACTER';}
+\'(\\\'|\\n|\\t|\\r|\\\\|[^\'])*\' { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
+\`(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\` { yytext = yytext.substr(1, yyleng-2); return 'CADENA_EJECUTABLE';}
 [0-9]+"."([0-9]+)?\b return 'DECIMAL';
 [0-9]+\b return 'ENTERO';
 ([a-zA-Z])[a-zA-Z0-9_]* return 'IDENTIFICADOR';
@@ -135,6 +136,8 @@ instruccion
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
 	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2, $4);}
+	| IDENTIFICADOR array_position INCREMENTO PUNTO_COMA {$$=instruccionesAPI.nuevoIncremento($1, $2);}
+	| IDENTIFICADOR array_position DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
 ;
 
 sentencias
@@ -155,6 +158,8 @@ sentencia
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
 	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
+	| IDENTIFICADOR array_position INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
+	| IDENTIFICADOR array_position DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -178,22 +183,22 @@ expresion
 	| DECIMAL											{ $$ = instruccionesAPI.nuevoValor(Number($1), TIPO_VALOR.DECIMAL); }
 	| IDENTIFICADOR										{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.IDENTIFICADOR); }
 	| IDENTIFICADOR	ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS { $$ = instruccionesAPI.nuevaLlamada($1, $3); }
-	| CARACTER											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CARACTER); }
 	| R_TRUE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.TRUE); }
 	| R_FALSE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.FALSE); }
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
+	| CADENA_EJECUTABLE { $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA_EJECUTABLE); }
 	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
 	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
 	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
-	| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE nuevoArrayIndex {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
+	| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
 ;
 argumentos
 	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2);}
-	| {$$ = "NA";}
+	| {$$ = "Epsilon";}
 ;
 argumentos_P
 	: COMA expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($2, $3);}
-	| {$$ =  "NM";}
+	| {$$ =  "Epsilon";}
 ;
 /* Definición de la gramática de Typescript*/
 
@@ -204,11 +209,11 @@ declaracion
 ;
 listaID
 	: COMA IDENTIFICADOR definicion_tipo definicion listaID {$$=instruccionesAPI.nuevoID($2,$3, $4,$5);}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 listaIDConst
 	: COMA IDENTIFICADOR definicion_tipo IGUAL expresion listaID {$$=instruccionesAPI.nuevoID($2, $3, $5, $6);}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 definicion
 	:IGUAL expresion {$$=$2;}
@@ -235,23 +240,23 @@ declarar_array
 ;
 objeto
 	: ABRIR_LLAVE obj_atributos CERRAR_LLAVE {$$=$2;}
-	| ABRIR_LLAVE CERRAR_LLAVE {$$="NA";}
+	| ABRIR_LLAVE CERRAR_LLAVE {$$="Epsilon";}
 ;
 obj_atributos 
 	: IDENTIFICADOR DOS_PUNTOS expresion obj_atributos_pr {$$=instruccionesAPI.nuevoObjAtributo($1, $3, $4);}
 ;
 obj_atributos_pr
 	: COMA obj_atributos {$$=$2;}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 //try
 arrays
 	:  expresion arrays_pr {$$=instruccionesAPI.nuevoDato($1, $2);}
-	| {$$="NA";}
+	| {$$="Epsilon";}
 ;
 arrays_pr
 	: COMA expresion arrays_pr {$$=instruccionesAPI.nuevoDato($2, $3);}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 type
 	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE type_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
@@ -261,11 +266,11 @@ type_atributos
 ;
 type_atributos_pr
 	: COMA type_atributos {$$=$2;}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 elseIf
 	: R_ELSE elseIf_P { $$ = $2;}
-	| { $$ = "NELSE"; }	
+	| { $$ = "Epsilon"; }	//NELSE
 ;
 elseIf_P
 	: R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf {$$ = instruccionesAPI.nuevoElseIf($3, $6, $8);}
@@ -274,7 +279,7 @@ elseIf_P
 cases
 	: R_CASE expresion DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE cases {$$=instruccionesAPI.nuevoCase($2, $5, $7);} 
 	| R_DEFAULT DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoDefault($4);}
-	| {$$="NA";}
+	| {$$="Epsilon";}
 ;
 for_init	
 	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $5, $3);}
@@ -287,11 +292,11 @@ for_change
 ;
 parametros
 	: IDENTIFICADOR definicion_tipo parametros_pr {$$=instruccionesAPI.nuevoParametro($2, $1, $3);}
-	| {$$="NA";}
+	| {$$="Epsilon";}
 ;
 parametros_pr
 	: COMA IDENTIFICADOR  definicion_tipo parametros_pr {$$=instruccionesAPI.nuevoParametro($3, $2, $4);}
-	| {$$="NM";}
+	| {$$="Epsilon";}
 ;
 opcional
 	: OPERADOR_TERNARIO {$$=true;}
@@ -299,7 +304,7 @@ opcional
 ;
 retorno
 	: expresion {$$=$1;}
-	| {$$="NA";}
+	| {$$="Epsilon";}
 ;
 array_position
 	: ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoArrayIndex($2, $4);}

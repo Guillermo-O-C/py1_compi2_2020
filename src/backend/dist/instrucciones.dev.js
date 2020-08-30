@@ -20,7 +20,8 @@ var TIPO_VALOR = {
   TRUE: 'TRUE',
   FALSE: 'FALSE',
   OBJETO: 'OBJETO',
-  ANONYMOUS_FUNCTION: 'ANONYMOUS_FUNCTION'
+  ANONYMOUS_FUNCTION: 'ANONYMOUS_FUNCTION',
+  CADENA_EJECUTABLE: 'CADENA_EJECUTABLE'
 };
 var TIPO_OPERACION = {
   SUMA: 'SUMA',
@@ -70,7 +71,9 @@ var SENTENCIAS = {
   INCREMENTO: 'INCREMENTO',
   DECREMENTO: 'DECREMENTO',
   FOR_OF: 'FOR_OF',
-  FOR_IN: 'FOR_IN'
+  FOR_IN: 'FOR_IN',
+  ACCESO_POSICION: 'ACCESO_POSICION',
+  TYPE_DECLARATION: 'TYPE_DECLARATION'
 };
 var TIPO_DATO = {
   NUMBER: 'NUMBER',
@@ -78,7 +81,6 @@ var TIPO_DATO = {
   STRING: 'STRING',
   OBJETO: 'OBJETO',
   VOID: 'VOID',
-  TYPES: 'TYPES',
   ARRAY: 'ARRAY',
   TYPE: 'TYPE',
   OPERADOR_TERNARIO: 'OPERADOR_TERNARIO'
@@ -191,8 +193,6 @@ function () {
 }();
 
 function Data_Type(tipo) {
-  console.log(tipo);
-
   if (tipo === "number") {
     return TIPO_DATO.NUMBER;
   } else if (tipo === "boolean") {
@@ -295,6 +295,7 @@ var instruccionesAPI = {
   },
   nuevoType: function nuevoType(id, atributos) {
     return {
+      sentencia: SENTENCIAS.TYPE_DECLARATION,
       data_type: TIPO_DATO.TYPE,
       id: id,
       atributos: atributos
@@ -452,10 +453,26 @@ var instruccionesAPI = {
       next_index: next_index
     };
   },
-  nuevoAccesoAPosicion: function nuevoAccesoAPosicion(index, next_index) {
+  nuevoAccesoAPosicion: function nuevoAccesoAPosicion(id, index, next_index) {
     return {
+      sentencia: SENTENCIAS.ACCESO_POSICION,
+      id: id,
       index: index,
       next_index: next_index
+    };
+  },
+  nuevoDecremento: function nuevoDecremento(id, array_index) {
+    return {
+      sentencia: SENTENCIAS.DECREMENTO,
+      id: id,
+      array_index: array_index
+    };
+  },
+  nuevoIncremento: function nuevoIncremento(id, array_index) {
+    return {
+      sentencia: SENTENCIAS.INCREMENTO,
+      id: id,
+      array_index: array_index
     };
   }
 };
