@@ -8,7 +8,8 @@ const TIPO_VALOR = {
     FALSE: 'FALSE',
     OBJETO: 'OBJETO',
     ANONYMOUS_FUNCTION: 'ANONYMOUS_FUNCTION',
-    CADENA_EJECUTABLE: 'CADENA_EJECUTABLE'
+    CADENA_EJECUTABLE: 'CADENA_EJECUTABLE',
+    CADENA_CHARS:'CADENA_CHARS'
 };
 const TIPO_OPERACION = {
     SUMA: 'SUMA',
@@ -60,7 +61,10 @@ const SENTENCIAS = {
     FOR_OF:'FOR_OF',
     FOR_IN:'FOR_IN',
     ACCESO_POSICION:'ACCESO_POSICION',
-    TYPE_DECLARATION:'TYPE_DECLARATION'
+    TYPE_DECLARATION:'TYPE_DECLARATION',
+    PUSH:'PUSH',
+    POP:'POP',
+    LENGTH:'LENGTH'
 };
 const TIPO_DATO = {
     NUMBER: 'NUMBER',
@@ -71,6 +75,10 @@ const TIPO_DATO = {
     ARRAY: 'ARRAY',
     TYPE: 'TYPE',
     OPERADOR_TERNARIO: 'OPERADOR_TERNARIO'
+};
+const TIPO_ACCESO={
+    ATRIBUTO:'ATRIBUTO',
+    POSICION:'POSICION'
 };
 const TIPO_VARIABLE ={
     LET: 'LET',
@@ -424,6 +432,44 @@ const instruccionesAPI = {
             id:id,
             array_index:array_index
         };
+    },
+    nuevoPush: function(id, acc, valor){
+        return{
+            sentencia:SENTENCIAS.PUSH,
+            id:id,
+            acc:acc,
+            valor:valor
+        };
+    },
+    nuevoPop: function(){
+        return{            
+            sentencia:SENTENCIAS.POP
+        };
+    },
+    nuevoLength: function(){
+        return{            
+            sentencia:SENTENCIAS.LENGTH
+        };
+    },
+    nuevaReferencia:function(id, acc){
+        return{
+            id:id,
+            acc:acc
+        };
+    },
+    nuevoAccPosicion:function(index, next_acc){
+        return{
+            acc_type:TIPO_ACCESO.POSICION,
+            index:index,
+            next_acc:next_acc
+        };
+    },
+    nuevoAccAtributo:function(atributo, next_acc){
+        return{
+            acc_type:_TIPO_ACCESO.ATRIBUTO,
+            atributo:atributo,
+            next_acc:next_acc
+        };
     }
 };
 
@@ -441,3 +487,5 @@ const _TIPO_DATO = TIPO_DATO;
 export { _TIPO_DATO as TIPO_DATO };
 const _TS = TS;
 export { _TS as TS };
+const _TIPO_ACCESO = TIPO_ACCESO;
+export {_TIPO_ACCESO as TIPO_ACCESO};

@@ -34,7 +34,7 @@
 "function" return 'R_FUNCTION';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
-\'(\\\'|\\n|\\t|\\r|\\\\|[^\'])*\' { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
+\'(\\\'|\\n|\\t|\\r|\\\\|[^\'])*\' { yytext = yytext.substr(1, yyleng-2); return 'CADENA_CHARS';}
 \`(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\` { yytext = yytext.substr(1, yyleng-2); return 'CADENA_EJECUTABLE';}
 [0-9]+"."([0-9]+)?\b return 'DECIMAL';
 [0-9]+\b return 'ENTERO';
@@ -135,9 +135,10 @@ instruccion
 	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9); }
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2, $4);}
-	| IDENTIFICADOR array_position INCREMENTO PUNTO_COMA {$$=instruccionesAPI.nuevoIncremento($1, $2);}
-	| IDENTIFICADOR array_position DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
+	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
+	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
+	| id PUNTO_COMA {$$=$1;}
 ;
 
 sentencias
@@ -157,9 +158,10 @@ sentencia
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| IDENTIFICADOR array_position IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
-	| IDENTIFICADOR array_position INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
-	| IDENTIFICADOR array_position DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
+	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
+	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
+	| id PUNTO_COMA {$$=$1;}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -181,16 +183,22 @@ expresion
 	| ABRIR_PARENTESIS expresion CERRAR_PARENTESIS					{ $$ = $2; }
 	| ENTERO											{ $$ = instruccionesAPI.nuevoValor(Number($1), TIPO_VALOR.NUMERO); }
 	| DECIMAL											{ $$ = instruccionesAPI.nuevoValor(Number($1), TIPO_VALOR.DECIMAL); }
-	| IDENTIFICADOR										{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.IDENTIFICADOR); }
+	//	| IDENTIFICADOR										{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.IDENTIFICADOR); }
 	| IDENTIFICADOR	ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS { $$ = instruccionesAPI.nuevaLlamada($1, $3); }
 	| R_TRUE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.TRUE); }
 	| R_FALSE											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.FALSE); }
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
+	| CADENA_CHARS { $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA_CHARS); }
 	| CADENA_EJECUTABLE { $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA_EJECUTABLE); }
 	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
 	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
+	| id {$$=instruccionesAPI.nuevoValor($1, TIPO_VALOR.IDENTIFICADOR);}
+	//	| id PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop();}
+	//	| id PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength();}
 	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
-	| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
+	//| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
+	//| IDENTIFICADOR array_position PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop($1, $2);}
+	//| IDENTIFICADOR array_position PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength($1, $2);}
 ;
 argumentos
 	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2);}
@@ -249,6 +257,7 @@ obj_atributos_pr
 	: COMA obj_atributos {$$=$2;}
 	| {$$="Epsilon";}
 ;
+/**/
 //try
 arrays
 	:  expresion arrays_pr {$$=instruccionesAPI.nuevoDato($1, $2);}
@@ -258,6 +267,7 @@ arrays_pr
 	: COMA expresion arrays_pr {$$=instruccionesAPI.nuevoDato($2, $3);}
 	| {$$="Epsilon";}
 ;
+
 type
 	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE type_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
 ;
@@ -298,10 +308,6 @@ parametros_pr
 	: COMA IDENTIFICADOR  definicion_tipo parametros_pr {$$=instruccionesAPI.nuevoParametro($3, $2, $4);}
 	| {$$="Epsilon";}
 ;
-opcional
-	: OPERADOR_TERNARIO {$$=true;}
-	| {$$=false;}
-;
 retorno
 	: expresion {$$=$1;}
 	| {$$="Epsilon";}
@@ -310,9 +316,14 @@ array_position
 	: ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoArrayIndex($2, $4);}
 	| {$$="false";}
 ;
-/*
-Gramáticac para las funciones anónimas
-funcion
-	: R_FUNCTION ABRIR_PARENTESIS parametros CERRAR_PARENTESIS ABRIR_LLAVE instrucciones CERRAR_LLAVE {$$=instruccionesAPI.nuevaFuncion($-1);}
+id
+	: IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevaReferencia($1, $2);}
 ;
-*/
+id_pr
+	: ABRIR_CORCHETE expresion CERRAR_CORCHETE id_pr {$$=instruccionesAPI.nuevoAccPosicion($2, $4);}
+	| PUNTO IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevoAccAtributo($2, $3);}
+	| PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop();}
+	| PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength();}
+	| PUNTO R_PUSH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPush($4);}
+	| {$$="Epsilon";}
+;

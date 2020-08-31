@@ -15,17 +15,21 @@ export default function Traducir(salida, consola, traduccion){
     function procesarBloque(instrucciones, tablaDeSimbolos, ambito){
         for(let instruccion of instrucciones){
             if (instruccion.sentencia === SENTENCIAS.DECLARACION) {
-                procesarDeclaracion(instruccion, tablaDeSimbolos);
+                procesarDeclaracion(instruccion, tablaDeSimbolos, ambito);
             }else if (instruccion.sentencia === SENTENCIAS.TYPE_DECLARATION) {
                 procesarTypeDeclaration(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.IF){
                 procesarIf(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
                 procesarImpresion(instruccion);
+            }else if(instruccion.sentencia === SENTENCIAS.SWITCH){
+                procesarSwitch(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion==";"){
+                console.log("En esta posición hay un error sintáctico.")
             }
         }
     }
-    function procesarDeclaracion(instruccion, tablaDeSimbolos, ambitos){
+    function procesarDeclaracion(instruccion, tablaDeSimbolos, ambito){
         output+=Variable_Type(instruccion.variable_type)+" ";
         let temp = instruccion;
         while(temp!="Epsilon"){
@@ -150,6 +154,8 @@ export default function Traducir(salida, consola, traduccion){
             return procesarOperadorTernario(expresion);
         }else if (expresion.sentencia === SENTENCIAS.ACCESO_POSICION) {
             return procesarAccesoAPosicion(expresion);
+        } else if (expresion.tipo === TIPO_VALOR.CADENA) {
+            return "\""+expresion.valor+"\"";
         }else {
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
         }
@@ -256,5 +262,23 @@ export default function Traducir(salida, consola, traduccion){
     }
     function procesarImpresion(instruccion){
         output+="console.log("+procesarExpresionNumerica(instruccion.valor)+");\n";
+    }
+    function procesarSwitch(instruccion, tablaDeSimbolos, ambito){
+        output+="switch("+procesarExpresionNumerica(instruccion.logica)+"){\n";
+        let temp = instruccion.cases;
+        while(temp!="Epsilon"){
+            if(temp.logica=="default"){
+                output+="default:{\n";
+                procesarBloque(temp.accion);
+                output+="}";
+                break;
+            }else{
+                output+="case "+procesarExpresionNumerica(temp.logica)+":{\n";
+                procesarBloque(temp.accion);
+                output+="}";
+            }
+            temp=temp.next_case;
+        }
+        output+="\n}\n";
     }
 }
