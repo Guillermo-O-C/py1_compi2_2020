@@ -31,7 +31,8 @@
 "type" return 'R_TYPE';
 "of" return 'R_OF';
 "in" return 'R_IN';
-"function" return 'R_FUNCTION';
+"function" return 'R_FUNCTION' ;
+"null" return 'R_NULL';
 
 \"(\\\"|\\n|\\t|\\r|\\\\|[^\"])*\" { yytext = yytext.substr(1, yyleng-2); return 'CADENA';}
 \'(\\\'|\\n|\\t|\\r|\\\\|[^\'])*\' { yytext = yytext.substr(1, yyleng-2); return 'CADENA_CHARS';}
@@ -127,18 +128,20 @@ instruccion
 	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
 	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($5);}
 	| R_SWITCH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE cases CERRAR_LLAVE {$$=instruccionesAPI.nuevoSwitch($3, $6);}
-	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, $7, $10);}
+	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, {id:$6, paso:$7}, $10);}
 	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_OF IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForOF($4, $6, $9);}
 	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
-	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9); }
+	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9, @2.first_line, @2.first_column); console.log(@2);}
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
-	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
-	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
-	| id PUNTO_COMA {$$=$1;}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);}
+	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1);}
+	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1);}
+	| id PUNTO_COMA {$$=instruccionesAPI.nuevoAcceso($1);}
+	| R_BREAK PUNTO_COMA{$$=instruccionesAPI.nuevoBreak();}
+	| R_CONTINUE PUNTO_COMA {$$=instruccionesAPI.nuevoContinue();}
 ;
 
 sentencias
@@ -147,21 +150,23 @@ sentencias
 ;
 sentencia
 	: declaracion {$$=$1;}
-	| type {$$=$1;}
+//	| type {$$=$1;}
 	| R_IF ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE elseIf { $$ = instruccionesAPI.nuevoIf($3, $6, $8);}
 	| R_CONSOLE PUNTO R_LOG ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevoImprimir($5);}
 	| R_SWITCH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE cases CERRAR_LLAVE {$$=instruccionesAPI.nuevoSwitch($3, $6);}
-	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, $7, $10);}
-	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_OF IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForOF($4, $6, $9);}
-	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN IDENTIFICADOR CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
+	| R_FOR ABRIR_PARENTESIS for_init expresion PUNTO_COMA IDENTIFICADOR for_change CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE { $$ = instruccionesAPI.nuevoFor($3, $4, {id:$6, paso:$7}, $10);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_OF id CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForOF($4, $6, $9);}
+	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN id CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
 	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $2,$4);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);}
 	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
 	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
-	| id PUNTO_COMA {$$=$1;}
+	| id PUNTO_COMA {$$=instruccionesAPI.nuevoAcceso($1);}
+	| R_BREAK PUNTO_COMA{$$=instruccionesAPI.nuevoBreak();}
+	| R_CONTINUE PUNTO_COMA {$$=instruccionesAPI.nuevoContinue();}
 ;
 expresion
 	: MENOS expresion %prec UMENOS				{ $$ = instruccionesAPI.nuevaOperacionUnaria($2, TIPO_OPERACION.NEGATIVO); }
@@ -196,6 +201,7 @@ expresion
 	//	| id PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop();}
 	//	| id PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength();}
 	| expresion OPERADOR_TERNARIO expresion DOS_PUNTOS expresion {$$=instruccionesAPI.nuevoOperadorTernario($1, $3, $5);}
+	| R_NULL {$$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.NULL);}
 	//| IDENTIFICADOR ABRIR_CORCHETE expresion CERRAR_CORCHETE array_position {$$=instruccionesAPI.nuevoAccesoAPosicion($1, $3, $5);}
 	//| IDENTIFICADOR array_position PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop($1, $2);}
 	//| IDENTIFICADOR array_position PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength($1, $2);}
@@ -211,14 +217,15 @@ argumentos_P
 /* Definición de la gramática de Typescript*/
 
 declaracion
-	: R_LET IDENTIFICADOR definicion_tipo definicion listaID PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $4, $5);}
-	| R_CONST IDENTIFICADOR definicion_tipo IGUAL expresion listaIDConst PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $5, $6);}
+	: R_LET IDENTIFICADOR definicion_tipo definicion listaID PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $4, $5, @2.first_line, @2.first_column);}
+	| R_CONST IDENTIFICADOR definicion_tipo definicion listaID PUNTO_COMA{$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $4, $5, @2.first_line, @2.first_column);}
 	| error PUNTO_COMA
 ;
 listaID
-	: COMA IDENTIFICADOR definicion_tipo definicion listaID {$$=instruccionesAPI.nuevoID($2,$3, $4,$5);}
+	: COMA IDENTIFICADOR definicion_tipo definicion listaID {$$=instruccionesAPI.nuevoID($2,$3, $4,$5, @2.first_line, @2.first_column);}
 	| {$$="Epsilon";}
 ;
+//se deja el error de no inicializar una const para el análisis semántico
 listaIDConst
 	: COMA IDENTIFICADOR definicion_tipo IGUAL expresion listaID {$$=instruccionesAPI.nuevoID($2, $3, $5, $6);}
 	| {$$="Epsilon";}
@@ -234,7 +241,7 @@ definicion_const
 ;
 definicion_tipo
 	: DOS_PUNTOS tipo {$$=$2;}
-	| {$$={tipo:"infer", isArray:"undefinied"};}
+	| {$$={tipo:"infer", isArray:false};}
 ;
 tipo
 	: R_NUMBER declarar_array { $$=instruccionesAPI.nuevoTipo($1,$2); }
@@ -269,7 +276,7 @@ arrays_pr
 ;
 
 type
-	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE type_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5);}
+	: R_TYPE IDENTIFICADOR IGUAL ABRIR_LLAVE type_atributos CERRAR_LLAVE PUNTO_COMA {$$=instruccionesAPI.nuevoType($2,$5, @2.first_line, @2.first_column);}
 ;
 type_atributos 
 	: IDENTIFICADOR definicion_tipo type_atributos_pr {$$=instruccionesAPI.nuevoTypeAtributo($1, $2, $3);}
@@ -292,7 +299,7 @@ cases
 	| {$$="Epsilon";}
 ;
 for_init	
-	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $5, $3);}
+	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $5, "Epsilon");}
 	| IDENTIFICADOR IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);} 
 ;
 for_change

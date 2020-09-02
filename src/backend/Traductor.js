@@ -1,4 +1,4 @@
-import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR } from "./instrucciones";
+import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR, TIPO_ACCESO } from "./instrucciones";
 
 export default function Traducir(salida, consola, traduccion){
    // console.log("this is the output"+  JSON.stringify(salida.AST)); 
@@ -6,8 +6,11 @@ export default function Traducir(salida, consola, traduccion){
    try {
         consola.value="";
         const tsGlobal = new TS([]);
+        scanForFunctions(salida.AST, tsGlobal, "Global");
+        scanForTypes(salida.AST, tsGlobal);
         procesarBloque(salida.AST, tsGlobal, "Global");
         traduccion.setValue(output);
+        console.log(tsGlobal);
     } catch (e) {
         console.error(e);
         return;
@@ -16,16 +19,59 @@ export default function Traducir(salida, consola, traduccion){
         for(let instruccion of instrucciones){
             if (instruccion.sentencia === SENTENCIAS.DECLARACION) {
                 procesarDeclaracion(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if (instruccion.sentencia === SENTENCIAS.ASIGNACION) {
+                procesarAsigacion(instruccion);
+                output+="\n";
             }else if (instruccion.sentencia === SENTENCIAS.TYPE_DECLARATION) {
                 procesarTypeDeclaration(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.IF){
                 procesarIf(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
                 procesarImpresion(instruccion);
+                output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.SWITCH){
                 procesarSwitch(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.FOR){
+                procesarFor(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.FOR_IN){
+                procesarForIn(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.FOR_OF){
+                procecsarForOf(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.WHILE){
+                procesarWhile(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.DO_WHILE){
+                procesarDoWhile(instruccion, tablaDeSimbolos, ambito);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.LLAMADA){
+                output+=procesarLLamada(instruccion)+"\n";
+            }else if(instruccion.sentencia === SENTENCIAS.RETURN){
+                procesarReturn(instruccion);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.BREAK){
+                output+="break;\n"
+            }else if(instruccion.sentencia === SENTENCIAS.CONTINUE){
+                output+="continue;\n";
+            }else if(instruccion.sentencia === SENTENCIAS.INCREMENTO){
+                procesarIncremento(instruccion);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.DECREMENTO){
+                procesarDecremento(instruccion);
+                output+="\n";
+            }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
+                procesarIdentificador(instruccion.id);
+            }else if(instruccion.sentencia === SENTENCIAS.FUNCION){
+                procesarFuncion(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion==";"){
-                console.log("En esta posición hay un error sintáctico.")
+                console.log("En esta posición hay un error sintáctico.");
+                //se ignora esta acción
             }
         }
     }
@@ -51,7 +97,7 @@ export default function Traducir(salida, consola, traduccion){
             }
             temp=temp.next_declaration;
         }
-        output+=";\n";       
+        output+=";";       
     }
     function Data_Type(tipo){
         if (tipo === TIPO_DATO.NUMBER) {
@@ -145,7 +191,7 @@ export default function Traducir(salida, consola, traduccion){
         } else if (expresion.tipo === TIPO_VALOR.FALSE) {
             return "false";
         } else if (expresion.tipo === TIPO_VALOR.IDENTIFICADOR) {
-            return expresion.valor;
+            return procesarIdentificador(expresion.valor);
         } else if (expresion.tipo === TIPO_VALOR.OBJETO) {
             return procesarObjeto(expresion);
         }else if (expresion.data_type === TIPO_DATO.ARRAY) {
@@ -156,6 +202,10 @@ export default function Traducir(salida, consola, traduccion){
             return procesarAccesoAPosicion(expresion);
         } else if (expresion.tipo === TIPO_VALOR.CADENA) {
             return "\""+expresion.valor+"\"";
+        } else if (expresion.tipo === TIPO_VALOR.CADENA_CHARS) {
+            return "'"+expresion.valor+"'";
+        } else if (expresion.tipo === TIPO_VALOR.CADENA_EJECUTABLE) {
+            return "`"+expresion.valor+"`";
         }else {
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
         }
@@ -238,7 +288,7 @@ export default function Traducir(salida, consola, traduccion){
             }           
             temp=temp.next;
         }
-        output+="\n};\n";
+        output+="\n};";
     }
     function procesarIf(instruccion, tablaDeSimbolos, ambito){
         output+="if("+procesarExpresionNumerica(instruccion.logica)+"){\n";
@@ -258,10 +308,9 @@ export default function Traducir(salida, consola, traduccion){
                 output+="}"
             }
         }
-        output+="\n";
     }
     function procesarImpresion(instruccion){
-        output+="console.log("+procesarExpresionNumerica(instruccion.valor)+");\n";
+        output+="console.log("+procesarExpresionNumerica(instruccion.valor)+");";
     }
     function procesarSwitch(instruccion, tablaDeSimbolos, ambito){
         output+="switch("+procesarExpresionNumerica(instruccion.logica)+"){\n";
@@ -279,6 +328,112 @@ export default function Traducir(salida, consola, traduccion){
             }
             temp=temp.next_case;
         }
-        output+="\n}\n";
+        output+="\n}";
+    }
+    function procesarIdentificador(identificador){
+        let text="";
+        text+=identificador.id;
+        let temp = identificador.acc;
+        while(temp!="Epsilon"){
+            if(temp.acc_type==TIPO_ACCESO.ATRIBUTO){
+                text+="."+temp.atributo;
+            }else if(temp.acc_type==TIPO_ACCESO.POSICION){
+                text+="["+procesarExpresionNumerica(temp.index)+"]";
+            }else if(temp.sentencia==SENTENCIAS.LENGTH){
+                text+=".length";
+                break;
+            }else if(temp.sentencia==SENTENCIAS.PUSH){
+                text+=".push("+procesarExpresionNumerica(temp.valor)+")";
+                break;
+            }else if(temp.sentencia==SENTENCIAS.POP){
+                text+=".pop()";
+                break;
+            }
+            temp=temp.next_acc;
+        }
+        return text;
+    }
+    function procesarFor(instruccion, tablaDeSimbolos, ambito){
+        output+="for(";
+        if(instruccion.inicial.sentencia==SENTENCIAS.ASIGNACION){
+            output+=instruccion.inicial.id+"="+procesarExpresionNumerica(instruccion.inicial.expresion);
+        }else if(instruccion.inicial.sentencia==SENTENCIAS.DECLARACION){
+            procesarDeclaracion(instruccion.inicial);
+        }
+        output+=procesarExpresionNumerica(instruccion.final)+";";
+        if(instruccion.paso.paso=="++"){
+            output+=instruccion.paso.id+"++){\n";
+        }else  if(instruccion.paso.paso=="--"){
+            output+=instruccion.paso.id+"--){\n";
+        }else {
+            output+=instruccion.paso.id+"="+procesarExpresionNumerica(instruccion.paso.paso)+"){\n";
+        }
+        procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        output+="}";//se le quitó el \n porque cada sentencia lleva un salto de línea al final
+    }
+    function procesarAsigacion(instruccion){
+        output+=procesarIdentificador(instruccion.id)+"="+procesarExpresionNumerica(instruccion.expresion)+";";
+    }
+    function procecsarForOf(instruccion, tablaDeSimbolos, ambito){
+        output+="for(let "+instruccion.variable+" of "+instruccion.conjunto+"){\n";
+        procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        output+="}";
+    }
+    function procesarForIn(instruccion, tablaDeSimbolos, ambito){
+        output+="for(let "+instruccion.variable+" in "+instruccion.conjunto+"){\n";
+        procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        output+="}";
+    }
+    function procesarWhile(instruccion, tablaDeSimbolos, ambito){
+        output+="while("+procesarExpresionNumerica(instruccion.logica)+"){\n";
+        procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        output+="}"
+    }
+    function procesarDoWhile(instruccion, tablaDeSimbolos, ambito){
+        output+="do{\n";
+        procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        output+="}"+"while("+procesarExpresionNumerica(instruccion.logica)+");";
+    }
+    function procesarReturn(instruccion){
+        output+="return "+procesarExpresionNumerica(instruccion.valor)+";";
+    }
+    function procesarIncremento(instruccion){
+        output+=instruccion.id+"++;";
+    }
+    function procesarDecremento(instruccion){
+        output+=instruccion.id+"--;";
+    }
+    function procesarFuncion(instrucciones, tablaDeSimbolos, ambito){
+            let funciones=[];
+            output+=(ambito=="Global")?"function "+instrucciones.id+"(parametros):tipo{\n":"function "+ambito+"_"+instrucciones.id+"(parametros):tipo{\n";
+            for(let instruccion of instrucciones.accion){
+                if(instruccion.sentencia==SENTENCIAS.FUNCION){
+                    funciones.push(instruccion);
+                    output+="//origen de la función "+instruccion.id+"\n";
+                }else{
+                    procesarBloque([instruccion], tablaDeSimbolos, ambito);
+                }
+            }
+            output+="}\n"
+            for(let funcion of  funciones){
+                procesarFuncion(funcion, tablaDeSimbolos, instrucciones.id);
+            }
+            //imprimir todas las funciones justo después de salir de la función padre
+            //recorrer la función que se acaba de sacar para que saque a sus hijos
+    }
+    function scanForFunctions(instrucciones, tablaDeSimbolos, ambito){
+        for(let instruccion of instrucciones){
+            if(instruccion.sentencia==SENTENCIAS.FUNCION){
+                tablaDeSimbolos.agregarFuncion(instruccion.id, instruccion.tipo, null, null, ambito);
+                scanForFunctions(instruccion.accion, tablaDeSimbolos, instruccion.id);
+            }
+        }
+    }
+    function scanForTypes(instrucciones, tablaDeSimbolos){
+        for(let instruccion of instrucciones){
+            if(instruccion.sentencia==SENTENCIAS.TYPE_DECLARATION){
+                tablaDeSimbolos.agregarType(instruccion.id, null);
+            }
+        }
     }
 }

@@ -9,7 +9,8 @@ const TIPO_VALOR = {
     OBJETO: 'OBJETO',
     ANONYMOUS_FUNCTION: 'ANONYMOUS_FUNCTION',
     CADENA_EJECUTABLE: 'CADENA_EJECUTABLE',
-    CADENA_CHARS:'CADENA_CHARS'
+    CADENA_CHARS:'CADENA_CHARS',
+    NULL:'NULL'
 };
 const TIPO_OPERACION = {
     SUMA: 'SUMA',
@@ -64,7 +65,8 @@ const SENTENCIAS = {
     TYPE_DECLARATION:'TYPE_DECLARATION',
     PUSH:'PUSH',
     POP:'POP',
-    LENGTH:'LENGTH'
+    LENGTH:'LENGTH',
+    ACCESO:'ACCESO'
 };
 const TIPO_DATO = {
     NUMBER: 'NUMBER',
@@ -92,20 +94,32 @@ function nuevaOperacion(operandoIzq, OperandoDer, tipo) {
     }
 }
 
-function crearSimbolo(id, tipo, valor) {
+function crearSimbolo(id, tipo, valor, ambito) {
     return {
+        si:'variable',
         id: id,
         tipo: tipo,
-        valor: valor
+        valor: valor,
+        ambito:ambito
     }
 }
 
-function crearFuncion(id, tipo, parametros, accion) {
+function crearFuncion(id, tipo, parametros, accion,ambito) {
     return {
+        si:'funcion',
         id: id,
         tipo: tipo,
         parametros: parametros,
-        accion: accion
+        accion: accion,
+        ambito:ambito
+    }
+}
+
+function crearType(id, atributos){
+    return{
+        si:'type',
+        id:id,
+        atributos:atributos
     }
 }
 
@@ -119,9 +133,14 @@ class TS {
         this._simbolos.push(nuevoSimbolo);
     }
 
-    agregarFuncion(id, tipo, parametros, accion) {
-        const nuevaFuncion = crearFuncion(id, tipo, parametros, accion);
+    agregarFuncion(id, tipo, parametros, accion, ambito) {
+        const nuevaFuncion = crearFuncion(id, tipo, parametros, accion, ambito);
         this._simbolos.push(nuevaFuncion);
+    }
+
+    agregarType(id, atributos){
+        const nuevoType= crearType(id, atributos);
+        this._simbolos.push(nuevoType);
     }
 
     actualizar(id, valor) {
@@ -187,7 +206,7 @@ const instruccionesAPI = {
             valor: valor
         };
     },
-    nuevaDeclaracion: function(variable_type, id, data_type, valor, next_declaration) {
+    nuevaDeclaracion: function(variable_type, id, data_type, valor, next_declaration, fila, columna) {
         return {
             sentencia: SENTENCIAS.DECLARACION,
             variable_type:Variable_Type(variable_type),
@@ -195,16 +214,20 @@ const instruccionesAPI = {
             isArray:data_type.isArray,
             id: id,
             expresion: valor,
-            next_declaration:next_declaration
+            next_declaration:next_declaration,
+            fila:fila,
+            columna:columna
         };
     },
-    nuevoID:function( id, data_type, valor,  next_declaration){
+    nuevoID:function( id, data_type, valor,  next_declaration, fila, columna){
       return{
         data_type: Data_Type(data_type.tipo),
         isArray:data_type.isArray,
         id: id,
         expresion: valor,
-        next_declaration:next_declaration
+        next_declaration:next_declaration,
+        fila:fila,
+        columna:columna
       };  
     },
     nuevoObjeto:function(atributos){
@@ -251,12 +274,14 @@ const instruccionesAPI = {
           next_data:next_data
       };  
     },
-    nuevoType: function(id, atributos){
+    nuevoType: function(id, atributos, fila, columna){
         return{
             sentencia:SENTENCIAS.TYPE_DECLARATION,
             data_type:TIPO_DATO.TYPE,
             id:id,
-            atributos:atributos
+            atributos:atributos,
+            fila:fila,
+            columna:columna
         };
     },
     nuevoOperadorTernario:function(logica, result1, result2){
@@ -267,11 +292,10 @@ const instruccionesAPI = {
             result2:result2
         };
     },
-    nuevaAsignacion: function(id, ArrayPosition, valor) {
+    nuevaAsignacion: function(id, valor) {
         return {
             sentencia: SENTENCIAS.ASIGNACION,
             id: id,
-            ArrayPosition:ArrayPosition,
             expresion: valor
         };
     },
@@ -363,13 +387,15 @@ const instruccionesAPI = {
             accion:accion
         };  
       },
-    nuevaFuncion: function(tipo, id, parametros, accion) {
+    nuevaFuncion: function(tipo, id, parametros, accion,fila,columna) {
         return {
             sentencia: SENTENCIAS.FUNCION,
             tipo: Data_Type(tipo),
             id: id,
             parametros: parametros,
-            accion: accion
+            accion: accion,
+            fila:fila,
+            columna:columna
         }
     },
     nuevaListaid: function(id, siguiente) {
@@ -419,25 +445,21 @@ const instruccionesAPI = {
             next_index:next_index
         };
     },
-    nuevoDecremento: function(id, array_index){
+    nuevoDecremento: function(id){
         return{
             sentencia:SENTENCIAS.DECREMENTO,
-            id:id,
-            array_index:array_index
+            id:id
         };
     },
-    nuevoIncremento: function(id, array_index){
+    nuevoIncremento: function(id){
         return{
             sentencia:SENTENCIAS.INCREMENTO,
-            id:id,
-            array_index:array_index
+            id:id
         };
     },
-    nuevoPush: function(id, acc, valor){
+    nuevoPush: function(valor){
         return{
             sentencia:SENTENCIAS.PUSH,
-            id:id,
-            acc:acc,
             valor:valor
         };
     },
@@ -469,6 +491,22 @@ const instruccionesAPI = {
             acc_type:_TIPO_ACCESO.ATRIBUTO,
             atributo:atributo,
             next_acc:next_acc
+        };
+    },
+    nuevoContinue:function(){
+        return{
+            sentencia:SENTENCIAS.CONTINUE
+        };
+    },
+    nuevoBreak:function(){
+        return{
+            sentencia:SENTENCIAS.BREAK
+        };
+    },
+    nuevoAcceso: function(id){
+        return{
+            sentencia:SENTENCIAS.ACCESO,
+            id:id
         };
     }
 };

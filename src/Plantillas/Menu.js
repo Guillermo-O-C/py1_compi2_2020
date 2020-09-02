@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   paper: {
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     textAlign: 'center',
     color: theme.palette.text.secondary,
   },
@@ -73,6 +73,11 @@ const useStyles = makeStyles((theme) => ({
   },button: {
     margin: theme.spacing(1),
   },
+  p:{
+    backgroundColor:'#2c2c2c',
+    color:'#FFFF',
+    marginTop:'0%',
+  }
 }));
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -99,6 +104,9 @@ export default function UI() {
   function translationConsole(editor){
     salida=editor;
   }
+  function CursosLocation(editor){
+    document.getElementById('posicion').innerHTML="Línea:"+(editor.getCursor().line+1)+" Columna:"+editor.getCursor().ch;
+  }
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const handleClickOpen = () => {
@@ -121,7 +129,9 @@ export default function UI() {
                   lineNumbers: true
               }}
               onChange={(editor, data, value) => {entrada=value}}
+              onCursorActivity={(editor, data, value)=>{CursosLocation(editor)}}
           />
+          <p id="posicion" className={classes.p}>Línea:- Columna:-</p>
         </Grid>
         <Grid item xs={6}>
           <Paper className={classes.paper}>Traducción
