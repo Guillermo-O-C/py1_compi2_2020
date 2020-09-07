@@ -429,6 +429,8 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
     function procesarFuncion(instrucciones, tablaDeSimbolos, ambito){
             let funciones=[];
             output+=(ambito=="Global")?"function "+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n":"function "+ambito+"_"+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n";
+            if(ambito!="Global")tablaDeSimbolos.updateFuncionID(instrucciones.id, ambito+"_"+instrucciones.id);
+            instrucciones.id=(ambito=="Global")?instrucciones.id:ambito+"_"+instrucciones.id;
             for(let instruccion of instrucciones.accion){
                 if(instruccion.sentencia==SENTENCIAS.FUNCION){
                     funciones.push(instruccion);

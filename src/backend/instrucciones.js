@@ -170,6 +170,14 @@ class TS {
         if (funcion) return { tipo: funcion.tipo, parametros: funcion.parametros, accion: funcion.accion };
         else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
     }
+    updateFuncionID(id,  newID) {
+        const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
+        if (funcion) {
+            funcion.id=newID;
+            return true;
+        }
+        else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
+    }
 
     existe(id) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
