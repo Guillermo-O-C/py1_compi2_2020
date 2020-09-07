@@ -66,7 +66,10 @@ const SENTENCIAS = {
     PUSH:'PUSH',
     POP:'POP',
     LENGTH:'LENGTH',
-    ACCESO:'ACCESO'
+    ACCESO:'ACCESO',
+    GRAFICAR_TS:'GRAFICAR_TS',
+    ASIGNACION_SUMA:'ASIGNACION_SUMA',
+    ASIGNACION_RESTA:'ASIGNACION_RESTA'
 };
 const TIPO_DATO = {
     NUMBER: 'NUMBER',
@@ -94,32 +97,39 @@ function nuevaOperacion(operandoIzq, OperandoDer, tipo) {
     }
 }
 
-function crearSimbolo(id, tipo, valor, ambito) {
+function crearSimbolo(var_type, id, tipo, valor, ambito, fila, columna) {
     return {
         si:'variable',
+        var_type:var_type,
         id: id,
         tipo: tipo,
         valor: valor,
-        ambito:ambito
+        ambito:ambito,
+        fila:fila,
+        columna:columna
     }
 }
 
-function crearFuncion(id, tipo, parametros, accion,ambito) {
+function crearFuncion(id, tipo, parametros, accion,ambito, fila, columna) {
     return {
         si:'funcion',
         id: id,
         tipo: tipo,
         parametros: parametros,
         accion: accion,
-        ambito:ambito
+        ambito:ambito,
+        fila:fila,
+        columna:columna
     }
 }
 
-function crearType(id, atributos){
+function crearType(id, atributos, fila, columna){
     return{
         si:'type',
         id:id,
-        atributos:atributos
+        atributos:atributos,
+        fila:fila,
+        columna:columna
     }
 }
 
@@ -128,18 +138,18 @@ class TS {
         this._simbolos = simbolos;
     }
 
-    agregar(id, tipo) {
-        const nuevoSimbolo = crearSimbolo(id, tipo);
+    agregar(var_type, id, tipo, valor, ambito, fila, columna) {
+        const nuevoSimbolo = crearSimbolo(var_type, id, tipo, valor, ambito, fila, columna);
         this._simbolos.push(nuevoSimbolo);
     }
 
-    agregarFuncion(id, tipo, parametros, accion, ambito) {
-        const nuevaFuncion = crearFuncion(id, tipo, parametros, accion, ambito);
+    agregarFuncion(id, tipo, parametros, accion, ambito, fila, columna) {
+        const nuevaFuncion = crearFuncion(id, tipo, parametros, accion, ambito, fila, columna);
         this._simbolos.push(nuevaFuncion);
     }
 
-    agregarType(id, atributos){
-        const nuevoType= crearType(id, atributos);
+    agregarType(id, atributos, fila, columna){
+        const nuevoType= crearType(id, atributos, fila, columna);
         this._simbolos.push(nuevoType);
     }
 
@@ -508,7 +518,27 @@ const instruccionesAPI = {
             sentencia:SENTENCIAS.ACCESO,
             id:id
         };
-    }
+    },
+    nuevoGraficarTS:function(){
+        return{
+            sentencia:SENTENCIAS.GRAFICAR_TS
+        };
+    },
+    nuevoAsignacioSuma:function(id, valor){
+        return{
+            sentencia:SENTENCIAS.ASIGNACION_SUMA,
+            id:id,
+            valor:valor
+        };
+    },
+    nuevoAsignacioResta:function(id, valor){
+        return{
+            sentencia:SENTENCIAS.ASIGNACION_RESTA,
+            id:id,
+            valor:valor
+        };
+    },
+
 };
 
 const _TIPO_OPERACION = TIPO_OPERACION;
