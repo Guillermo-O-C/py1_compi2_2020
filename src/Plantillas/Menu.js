@@ -166,7 +166,6 @@ export default function UI() {
         celda3.innerHTML = simbolo.id;
         celda5.innerHTML = simbolo.fila;
         celda6.innerHTML = simbolo.columna;
-        celda7.innerHTML = simbolo.ambito;
       }
       }
     }
@@ -253,7 +252,6 @@ export default function UI() {
       celda3.innerHTML = simbolo.id;
       celda5.innerHTML = simbolo.fila;
       celda6.innerHTML = simbolo.columna;
-      celda7.innerHTML = simbolo.ambito;
     }
     }
   }
@@ -363,7 +361,7 @@ export default function UI() {
       <Grid container spacing={2}>
           <Grid item xs={6}>
             <Paper className={classes.paper}>CONSOLA</Paper>
-            <textarea disabled id="consola" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75", color:"#ffff"}} ></textarea>
+            <textarea disabled id="consola" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75", color:"#ffff", fontSize: "18px"}} ></textarea>
 
           </Grid> 
           <Grid item xs={6}>
@@ -382,6 +380,7 @@ export default function UI() {
               size="large"
               className={classes.button}
               startIcon={<WebIcon />}
+              onClick={handleClickOpenTsEj}
             >
               Tabla de símbolos de ejecución
             </Button>
@@ -391,6 +390,7 @@ export default function UI() {
               size="large"
               className={classes.button}
               startIcon={<ErrorOutlineIcon />}
+              onClick={handleClickOpenErEj}
             >
               Errores de ejecución
             </Button>
@@ -451,10 +451,11 @@ export default function UI() {
             </Typography>
           </Toolbar>
         </AppBar>
+        <div id="AST_FRAME"></div>
        <table id="tablaDeSalida" width="80%" style={{background:'#bbe1fa'}} border='1' align='center'> 
        </table>
       </Dialog>
-      <Dialog fullScreen open={open} onClose={handleClose} TransitionComponent={Transition}>
+     {/*  <Dialog fullScreen open={open} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar className={classes.appBar}>
           <Toolbar>
             <IconButton edge="start" color="inherit" onClick={handleClose} aria-label="close">
@@ -467,7 +468,7 @@ export default function UI() {
         </AppBar>
 
    //aca tiene que ir la etiqueta que tenga el grafo :p
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }

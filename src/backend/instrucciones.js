@@ -179,8 +179,8 @@ class TS {
         else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
     }
 
-    existe(id) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
+    existe(id, ambito) {
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito)[0];
         if (simbolo) return true;
         else return false;
     }

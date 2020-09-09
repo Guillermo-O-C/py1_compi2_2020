@@ -84,6 +84,8 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarIdentificador(instruccion.id);
             }else if(instruccion.sentencia === SENTENCIAS.FUNCION){
                 procesarFuncion(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia === SENTENCIAS.GRAFICAR_TS){
+                output+="graficar_ts();\n";
             }else if(instruccion==";"){
                 console.log("En esta posición hay un error sintáctico.");
                 //se ignora esta acción
@@ -109,7 +111,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                             temporal=temporal.next_dimension;
                         }
                     } 
-                    tablaDeSimbolos.agregar(instruccion.variable_type,temp.id, {tipo:temp.data_type, isArray:temp.isArray}, "undefined", ambito, temp.fila, temp.columna);
+                    tablaDeSimbolos.agregar(instruccion.variable_type,temp.id, {tipo:Data_Type(temp.data_type), isArray:temp.isArray}, "undefined", ambito, temp.fila, temp.columna);
             
                 }
             if(temp.expresion!="undefined"){
