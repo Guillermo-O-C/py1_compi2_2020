@@ -173,12 +173,19 @@ class TS {
     updateFuncionID(id,  newID) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
         if (funcion) {
+            funcion.oldID=funcion.id;
             funcion.id=newID;
             return true;
         }
         else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
     }
-
+    changeOldIDCall(id){
+        const funcion = this._simbolos.filter(simbolo => simbolo.oldID === id)[0];
+        if (funcion) {
+            return funcion.id;
+        }
+        else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
+    }
     existe(id, ambito) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito)[0];
         if (simbolo) return true;

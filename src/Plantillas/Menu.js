@@ -31,6 +31,7 @@ import Slide from '@material-ui/core/Slide';
 import Traducir from '../backend/Traductor';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
 import Ejecutar from '../backend/Interprete';
+import { TIPO_DATO } from '../backend/instrucciones';
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -211,18 +212,20 @@ export default function UI() {
     var celda05 = row0.insertCell(4);
     var celda06 = row0.insertCell(5);
     var celda07 = row0.insertCell(6);
+    var celda08 = row0.insertCell(7);
     celda01.innerHTML = "No.";
     celda02.innerHTML = "Sentencia";
     celda03.innerHTML = "ID";
     celda04.innerHTML = "Tipo";
-    celda05.innerHTML = "Fila";
-    celda06.innerHTML = "Columna";
-    celda07.innerHTML = "Ambito";
+    celda05.innerHTML = "Valor";
+    celda06.innerHTML = "Fila";
+    celda07.innerHTML = "Columna";
+    celda08.innerHTML = "Ambito";
   if(tablaDeSimbolos.length!=0){
     let i=1;
     for(let simbolo of tablaDeSimbolos._simbolos) {
     i++;
-    if(simbolo.si!="type"){
+    if(simbolo.si=="variable"){
       var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
       var celda1 = row.insertCell(0);
       var celda2 = row.insertCell(1);
@@ -231,13 +234,36 @@ export default function UI() {
       var celda5 = row.insertCell(4);
       var celda6 = row.insertCell(5);
       var celda7 = row.insertCell(6);
+      var celda8 = row.insertCell(7);
+      celda1.innerHTML = i;
+      celda2.innerHTML = simbolo.si;
+      celda3.innerHTML = simbolo.id;
+      celda4.innerHTML = simbolo.tipo;
+      if(simbolo.valor.tipo==TIPO_DATO.ARRAY){
+        celda5.innerHTML = JSON.stringify(simbolo.valor.valor);
+      }else{
+        celda5.innerHTML = simbolo.valor.valor;
+      }     
+      celda6.innerHTML = simbolo.fila;
+      celda7.innerHTML = simbolo.columna;
+      celda8.innerHTML = simbolo.ambito;
+    }else if(simbolo.si=="funcion"){
+      var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var celda1 = row.insertCell(0);
+      var celda2 = row.insertCell(1);
+      var celda3 = row.insertCell(2);
+      var celda4 = row.insertCell(3);
+      var celda5 = row.insertCell(4);
+      var celda6 = row.insertCell(5);
+      var celda7 = row.insertCell(6);
+      var celda8 = row.insertCell(7);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
       celda4.innerHTML = simbolo.tipo.tipo;
-      celda5.innerHTML = simbolo.fila;
-      celda6.innerHTML = simbolo.columna;
-      celda7.innerHTML = simbolo.ambito;
+      celda6.innerHTML = simbolo.fila;
+      celda7.innerHTML = simbolo.columna;
+      celda8.innerHTML = simbolo.ambito;
     }else{
       var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
       var celda1 = row.insertCell(0);

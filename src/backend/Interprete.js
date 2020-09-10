@@ -25,6 +25,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 procesarAsigacion(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
                 procesarImpresion(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
+                procesarMetodoID(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia === SENTENCIAS.IF){
+                procesarImpresion(instruccion, tablaDeSimbolos, ambito);
             }
         }
     }
@@ -92,7 +96,6 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         let temporal=[];
         let temp = parametros;
         while(temp!="Epsilon"){
-
             temporal.push({id:temp.id, data_type: procesarDataType(temp.tipo)});
             temp=temp.siguiente;
         }
@@ -106,10 +109,21 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
     }
     function procesarAsigacion(instruccion, tablaDeSimbolos, ambito){
-
+    }
+    function procesarExpresionCadena(expresion, tablaDeSimbolos) {
+        if (expresion.tipo === TIPO_OPERACION.SUMA) {
+            const cadIzq = procesarExpresionCadena(expresion.operandoIzq, tablaDeSimbolos).valor;
+            const cadDer = procesarExpresionCadena(expresion.operandoDer, tablaDeSimbolos).valor;
+            return { valor: cadIzq + cadDer, tipo: "string" };
+        } else if (expresion.tipo === TIPO_VALOR.CADENA) {
+            return { valor: expresion.valor, tipo: "string" };
+        } else {
+            return procesarExpresionNumerica(expresion, tablaDeSimbolos);
+        }
     }
     function procesarImpresion(instruccion, tablaDeSimbolos, ambito){
-
+        const cadena = procesarExpresionCadena(instruccion.valor, tablaDeSimbolos).valor;
+        consola.value += "> " + cadena + "\n";
     }
     function crearSimbolo(var_type, id, data_type, valor, ambito, tablaDeSimbolos, fila, columna){
         //Verificar que no exista en el mismo ámbito
@@ -119,16 +133,24 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
         //Ver que el tipo de símbolo sea el correcto con el del valor o undefined
         if(valor!="undefined"){
+            valor=procesarExpresionNumerica(valor);
             if(data_type.tipo=="infer"){
                 //asignar el tipo de valor a la variable
-                valor=procesarExpresionNumerica(valor);
-                //data_type=valor.tipo;
-            }{
+                /*
+                -comprobar si es array
+                -comprobar si todos los elementos del array son del mismo tipo,  hay tipo ARRAY
+                    -método recursivo para todos los elementos del array multidimensional
+                -si es array se cuentan las dimensiones, si no es array se pone dimension 0
+                -para sasber las dimensiones del array basat con entrar recursivamente al valor de la primera casilla hasta que el elemento no sea tipo array puesto que todos los elementos son del mismo tipo y eso se verificó previamente
+                */
+                data_type=valor.tipo;
+            }else{
                 //compara que está bien el tipo
+                data_type=procesarDataType(data_type);
             }
         }
         //Crear simbolo
-        tablaDeSimbolos.agregar(var_type, id, procesarDataType(data_type), valor, ambito, fila, columna);
+        tablaDeSimbolos.agregar(var_type, id, data_type, valor, ambito, fila, columna);
     }
     function procesarExpresionNumerica(expresion, tablaDeSimbolos, ambito) {
         if (expresion.sentencia === SENTENCIAS.LLAMADA) {
@@ -198,7 +220,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos).valor;
             return { valor: !valorIzq, tipo: "boolean" };
         } else if (expresion.tipo === TIPO_VALOR.NUMERO) {
-            return { valor: expresion.valor, tipo: TIPO_VALOR.NUMERO};
+            return { valor: expresion.valor, tipo: "number"};
         }else if (expresion.tipo === TIPO_VALOR.TRUE) {
             return { valor: true, tipo: "boolean" };
         } else if (expresion.tipo === TIPO_VALOR.FALSE) {
@@ -207,8 +229,35 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             return tablaDeSimbolos.obtenerSimbolo(expresion.valor, ambito);
         } else if (expresion.tipo === TIPO_VALOR.NULL) {
             return { valor: null, tipo: TIPO_DATO.NULL };
+        } else if (expresion.data_type === TIPO_DATO.ARRAY) {
+            return procesarArray(expresion);
         } else {
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
         }
+    }
+    function procesarArray(arreglo){
+        let temporal = [];
+        let temp = arreglo.dimension;
+        while(temp!="Epsilon"){
+            temporal.push(procesarExpresionNumerica(temp.dato));
+            temp=temp.next_data;
+        }
+        checkForMultyiType(JSON.parse(JSON.stringify(temporal)));
+        return {tipo:TIPO_DATO.ARRAY, valor:temporal};
+    }
+    function checkForMultyiType(arreglo){
+        if(arreglo.length>1){
+            let temp = arreglo.pop();
+            for(let temporal of arreglo){
+                if(temp.tipo!=temporal.tipo){
+                    arreglo.push(temp);
+                    consola.value+='>ERROR: No se permiten los arreglos multitype->\n'+JSON.stringify(arreglo);  
+                    throw '>ERROR: No se permiten los arreglos multitype'+JSON.stringify(arreglo);
+                }
+            }
+        }
+    }
+    function procesarMetodoID(instruccion, tablaDeSimbolos, ambito){
+      //   if()
     }
 }

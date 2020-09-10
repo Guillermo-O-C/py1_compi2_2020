@@ -23,13 +23,13 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarDeclaracion(instruccion, tablaDeSimbolos, ambito);
                 output+="\n";
             }else if (instruccion.sentencia === SENTENCIAS.ASIGNACION) {
-                procesarAsigacion(instruccion);
+                procesarAsigacion(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if (instruccion.sentencia === SENTENCIAS.ASIGNACION_SUMA) {
-                procesarAsigacionSuma(instruccion);
+                procesarAsigacionSuma(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if (instruccion.sentencia === SENTENCIAS.ASIGNACION_RESTA) {
-                procesarAsigacionResta(instruccion);
+                procesarAsigacionResta(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if (instruccion.sentencia === SENTENCIAS.TYPE_DECLARATION) {
                 procesarTypeDeclaration(instruccion, tablaDeSimbolos, ambito);
@@ -39,7 +39,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarIf(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
-                procesarImpresion(instruccion);
+                procesarImpresion(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.SWITCH){
                 const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
@@ -66,9 +66,9 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarDoWhile(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.LLAMADA){
-                output+=procesarLLamada(instruccion)+";\n";
+                output+=procesarLLamada(instruccion, tablaDeSimbolos)+";\n";
             }else if(instruccion.sentencia === SENTENCIAS.RETURN){
-                procesarReturn(instruccion);
+                procesarReturn(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.BREAK){
                 output+="break;\n"
@@ -81,7 +81,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarDecremento(instruccion);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
-                procesarIdentificador(instruccion.id);
+                procesarIdentificador(instruccion.id, tablaDeSimbolos);
             }else if(instruccion.sentencia === SENTENCIAS.FUNCION){
                 procesarFuncion(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.GRAFICAR_TS){
@@ -115,7 +115,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             
                 }
             if(temp.expresion!="undefined"){
-                output+="="+procesarExpresionNumerica(temp.expresion);
+                output+="="+procesarExpresionNumerica(temp.expresion, tablaDeSimbolos);
             }
            temp=temp.next_declaration;
         }
@@ -142,70 +142,70 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             return "const";
         }
     }
-    function procesarExpresionNumerica(expresion){
+    function procesarExpresionNumerica(expresion, tablaDeSimbolos){
         if (expresion.sentencia === SENTENCIAS.LLAMADA) {
-            return procesarLLamada(expresion);
+            return procesarLLamada(expresion, tablaDeSimbolos);
         } else if (expresion.tipo === TIPO_OPERACION.NEGATIVO) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
             return "(-"+valorIzq+")";
         } else if (expresion.tipo === TIPO_OPERACION.SUMA) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"+"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.RESTA) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"-"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MULTIPLICACION) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"*"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.DIVISION) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"/"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.POTENCIA) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"**" +valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MODULO) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq+ "%" +valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MAYOR) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq+ ">"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MAYOR_IGUAL) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +">=" +valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MENOR) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"<"+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.MENOR_IGUAL) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"<="+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.IGUAL_IGUAL) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"=="+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.DISTINTO) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"!="+ valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.AND) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq +"&&" +valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.OR) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
-            const valorDer = procesarExpresionNumerica(expresion.operandoDer);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
+            const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos);
             return "("+valorIzq+ "||" +valorDer+")";
         } else if (expresion.tipo === TIPO_OPERACION.NOT) {
-            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq);
+            const valorIzq = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos);
             return "(!"+valorIzq+")";
         } else if (expresion.tipo === TIPO_VALOR.NUMERO) {
             return expresion.valor;
@@ -214,15 +214,15 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         } else if (expresion.tipo === TIPO_VALOR.FALSE) {
             return "false";
         } else if (expresion.tipo === TIPO_VALOR.IDENTIFICADOR) {
-            return procesarIdentificador(expresion.valor);
+            return procesarIdentificador(expresion.valor, tablaDeSimbolos);
         } else if (expresion.tipo === TIPO_VALOR.OBJETO) {
-            return procesarObjeto(expresion);
+            return procesarObjeto(expresion, tablaDeSimbolos);
         }else if (expresion.data_type === TIPO_DATO.ARRAY) {
-            return procesarArreglo(expresion);
+            return procesarArreglo(expresion, tablaDeSimbolos);
         }else if (expresion.data_type === TIPO_DATO.OPERADOR_TERNARIO) {
-            return procesarOperadorTernario(expresion);
+            return procesarOperadorTernario(expresion, tablaDeSimbolos);
         }else if (expresion.sentencia === SENTENCIAS.ACCESO_POSICION) {
-            return procesarAccesoAPosicion(expresion);
+            return procesarAccesoAPosicion(expresion, tablaDeSimbolos);
         } else if (expresion.tipo === TIPO_VALOR.CADENA) {
             return "\""+expresion.valor+"\"";
         } else if (expresion.tipo === TIPO_VALOR.CADENA_CHARS) {
@@ -235,61 +235,61 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
         }
     }
-    function procesarLLamada(llamada){
-        let text=llamada.id+"(";
-        text+=procesarArgumentos(llamada.parametros);
+    function procesarLLamada(llamada, tablaDeSimbolos){
+        let text=tablaDeSimbolos.changeOldIDCall(llamada.id)+"(";
+        text+=procesarArgumentos(llamada.parametros, tablaDeSimbolos);
         text+=")";
         return text;
     }
-    function procesarArgumentos(argumentos){
+    function procesarArgumentos(argumentos, tablaDeSimbolos){
         let text="";
         let temp = argumentos;
         while(temp!="Epsilon"){
             if(temp!=argumentos) text+=",";
-            text+=procesarExpresionNumerica(temp.expresion);
+            text+=procesarExpresionNumerica(temp.expresion, tablaDeSimbolos);
             temp=temp.siguiente;
         }
         return text;
     }
-    function procesarObjeto(objeto){
+    function procesarObjeto(objeto, tablaDeSimbolos){
         let text="{\n";
         let temp = objeto.atributos;
         while(temp!="Epsilon"){
-            text+=temp.id+":"+procesarExpresionNumerica(temp.valor)+"\n";
+            text+=temp.id+":"+procesarExpresionNumerica(temp.valor, tablaDeSimbolos)+"\n";
             temp=temp.next;
         }
         return text+"}";
     }
-    function procesarArreglo(arreglo){
+    function procesarArreglo(arreglo, tablaDeSimbolos){
          let text="";
          text+="[";
          if(arreglo.dimension!="Epsilon"){
-            text+=procesarElementosDeArray(arreglo.dimension);
+            text+=procesarElementosDeArray(arreglo.dimension, tablaDeSimbolos);
          }
          return text+"]";
     }
-    function procesarElementosDeArray(datos){
+    function procesarElementosDeArray(datos, tablaDeSimbolos){
         let text="";
         let temp=datos;
         while(temp!="Epsilon"){
             if(temp!=datos) text+=",";
-            text+=procesarExpresionNumerica(temp.dato);
+            text+=procesarExpresionNumerica(temp.dato, tablaDeSimbolos);
             temp=temp.next_data;
         }
         return text;
     }
-    function procesarOperadorTernario(operacion){
+    function procesarOperadorTernario(operacion, tablaDeSimbolos){
         let text="";
-        text+=procesarExpresionNumerica(operacion.logica)+"?";
-        text+=procesarExpresionNumerica(operacion.result1)+":";
-        text+=procesarExpresionNumerica(operacion.result2);
+        text+=procesarExpresionNumerica(operacion.logica, tablaDeSimbolos)+"?";
+        text+=procesarExpresionNumerica(operacion.result1, tablaDeSimbolos)+":";
+        text+=procesarExpresionNumerica(operacion.result2, tablaDeSimbolos);
         return text;
     }
-    function procesarAccesoAPosicion(acceso){
+    function procesarAccesoAPosicion(acceso, tablaDeSimbolos){
         let text=acceso.id;
         let temp = acceso;
         while(temp!="false"){
-            text+="["+procesarExpresionNumerica(temp.index)+"]";
+            text+="["+procesarExpresionNumerica(temp.index, tablaDeSimbolos)+"]";
             temp=temp.next_index;
         }
         return text;
@@ -316,13 +316,13 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         output+="\n};";
     }
     function procesarIf(instruccion, tablaDeSimbolos, ambito){
-        output+="if("+procesarExpresionNumerica(instruccion.logica)+"){\n";
+        output+="if("+procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos)+"){\n";
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
         output+="}";
         if(instruccion.else!="Epsilon"){
             let temp = instruccion.else;
             while(temp.sentencia!=SENTENCIAS.ELSE && temp != "Epsilon"){
-                output+="else if("+procesarExpresionNumerica(temp.logica)+"){\n";
+                output+="else if("+procesarExpresionNumerica(temp.logica, tablaDeSimbolos)+"){\n";
                 procesarBloque(temp.accion, tablaDeSimbolos, ambito);
                 output+="}";
                 temp=temp.else;
@@ -334,11 +334,11 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             }
         }
     }
-    function procesarImpresion(instruccion){
-        output+="console.log("+procesarExpresionNumerica(instruccion.valor)+");";
+    function procesarImpresion(instruccion, tablaDeSimbolos){
+        output+="console.log("+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+");";
     }
     function procesarSwitch(instruccion, tablaDeSimbolos, ambito){
-        output+="switch("+procesarExpresionNumerica(instruccion.logica)+"){\n";
+        output+="switch("+procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos)+"){\n";
         let temp = instruccion.cases;
         while(temp!="Epsilon"){
             if(temp.logica=="default"){
@@ -347,7 +347,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 output+="}";
                 break;
             }else{
-                output+="case "+procesarExpresionNumerica(temp.logica)+":{\n";
+                output+="case "+procesarExpresionNumerica(temp.logica, tablaDeSimbolos)+":{\n";
                 procesarBloque(temp.accion);
                 output+="}";
             }
@@ -355,7 +355,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         }
         output+="\n}";
     }
-    function procesarIdentificador(identificador){
+    function procesarIdentificador(identificador, tablaDeSimbolos){
         let text="";
         text+=identificador.id;
         let temp = identificador.acc;
@@ -363,12 +363,12 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             if(temp.acc_type==TIPO_ACCESO.ATRIBUTO){
                 text+="."+temp.atributo;
             }else if(temp.acc_type==TIPO_ACCESO.POSICION){
-                text+="["+procesarExpresionNumerica(temp.index)+"]";
+                text+="["+procesarExpresionNumerica(temp.index, tablaDeSimbolos)+"]";
             }else if(temp.sentencia==SENTENCIAS.LENGTH){
                 text+=".length";
                 break;
             }else if(temp.sentencia==SENTENCIAS.PUSH){
-                text+=".push("+procesarExpresionNumerica(temp.valor)+")";
+                text+=".push("+procesarExpresionNumerica(temp.valor, tablaDeSimbolos)+")";
                 break;
             }else if(temp.sentencia==SENTENCIAS.POP){
                 text+=".pop()";
@@ -381,23 +381,23 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
     function procesarFor(instruccion, tablaDeSimbolos, ambito){
         output+="for(";
         if(instruccion.inicial.sentencia==SENTENCIAS.ASIGNACION){
-            output+=instruccion.inicial.id+"="+procesarExpresionNumerica(instruccion.inicial.expresion);
+            output+=instruccion.inicial.id+"="+procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos);
         }else if(instruccion.inicial.sentencia==SENTENCIAS.DECLARACION){
             procesarDeclaracion(instruccion.inicial, tablaDeSimbolos, ambito);
         }
-        output+=procesarExpresionNumerica(instruccion.final)+";";
+        output+=procesarExpresionNumerica(instruccion.final, tablaDeSimbolos)+";";
         if(instruccion.paso.paso=="++"){
             output+=instruccion.paso.id+"++){\n";
         }else  if(instruccion.paso.paso=="--"){
             output+=instruccion.paso.id+"--){\n";
         }else {
-            output+=instruccion.paso.id+"="+procesarExpresionNumerica(instruccion.paso.paso)+"){\n";
+            output+=instruccion.paso.id+"="+procesarExpresionNumerica(instruccion.paso.paso, tablaDeSimbolos)+"){\n";
         }
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
         output+="}";//se le quitó el \n porque cada sentencia lleva un salto de línea al final
     }
-    function procesarAsigacion(instruccion){
-        output+=procesarIdentificador(instruccion.id)+"="+procesarExpresionNumerica(instruccion.expresion)+";";
+    function procesarAsigacion(instruccion, tablaDeSimbolos){
+        output+=procesarIdentificador(instruccion.id, tablaDeSimbolos)+"="+procesarExpresionNumerica(instruccion.expresion, tablaDeSimbolos)+";";
     }
     function procecsarForOf(instruccion, tablaDeSimbolos, ambito){
         output+="for(let "+instruccion.variable+" of "+instruccion.conjunto+"){\n";
@@ -410,17 +410,17 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         output+="}";
     }
     function procesarWhile(instruccion, tablaDeSimbolos, ambito){
-        output+="while("+procesarExpresionNumerica(instruccion.logica)+"){\n";
+        output+="while("+procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos)+"){\n";
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
         output+="}"
     }
     function procesarDoWhile(instruccion, tablaDeSimbolos, ambito){
         output+="do{\n";
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
-        output+="}"+"while("+procesarExpresionNumerica(instruccion.logica)+");";
+        output+="}"+"while("+procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos)+");";
     }
-    function procesarReturn(instruccion){
-        output+="return "+procesarExpresionNumerica(instruccion.valor)+";";
+    function procesarReturn(instruccion, tablaDeSimbolos){
+        output+="return "+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+";";
     }
     function procesarIncremento(instruccion){
         output+=instruccion.id+"++;";
@@ -430,20 +430,22 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
     }
     function procesarFuncion(instrucciones, tablaDeSimbolos, ambito){
             let funciones=[];
-            output+=(ambito=="Global")?"function "+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n":"function "+ambito+"_"+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n";
-            if(ambito!="Global")tablaDeSimbolos.updateFuncionID(instrucciones.id, ambito+"_"+instrucciones.id);
-            instrucciones.id=(ambito=="Global")?instrucciones.id:ambito+"_"+instrucciones.id;
+            output+=/*(ambito=="Global")?*/"function "+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n"/*:"function "+ambito+"_"+instrucciones.id+"("+procesarParametros(instrucciones.parametros)+"):"+procesarTipo(instrucciones.tipo)+"{\n"*/;
+       //     if(ambito!="Global")tablaDeSimbolos.updateFuncionID(instrucciones.id, ambito+"_"+instrucciones.id);
+           // instrucciones.id=(ambito=="Global")?instrucciones.id:ambito+"_"+instrucciones.id;
             for(let instruccion of instrucciones.accion){
                 if(instruccion.sentencia==SENTENCIAS.FUNCION){
+                    //quizás con ponerlo acá se soluciona
                     funciones.push(instruccion);
-                    output+="//origen de la función "+instruccion.id+"\n";
+                    output+=(ambito!="Global")?"//origen de la función "+instruccion.id+"\n":"";
                 }else{
-                    procesarBloque([instruccion], tablaDeSimbolos, instrucciones.id);
+                        procesarBloque([instruccion], tablaDeSimbolos, instrucciones.id);
+                    
                 }
             }
             output+="}\n"
             for(let funcion of  funciones){
-                procesarFuncion(funcion, tablaDeSimbolos, instrucciones.id);
+                                    procesarFuncion(funcion, tablaDeSimbolos, instrucciones.id);                    
             }
             //imprimir todas las funciones justo después de salir de la función padre
             //recorrer la función que se acaba de sacar para que saque a sus hijos
@@ -452,6 +454,8 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         for(let instruccion of instrucciones){
             if(instruccion.sentencia==SENTENCIAS.FUNCION){
                 tablaDeSimbolos.agregarFuncion(instruccion.id, instruccion.tipo, null, null, ambito, instruccion.fila, instruccion.columna);
+                if(ambito!="Global")tablaDeSimbolos.updateFuncionID(instruccion.id, ambito+"_"+instruccion.id);
+                instruccion.id=(ambito=="Global")?instruccion.id:ambito+"_"+instruccion.id;
                 scanForFunctions(instruccion.accion, tablaDeSimbolos, instruccion.id);
             }
         }
@@ -493,11 +497,11 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         //se realiza también para saber que no viene un push en la parte derecha
         //se realiza en los métodos no en procesarBloque
     }
-    function procesarAsigacionSuma(instruccion){
-        output+=procesarIdentificador(instruccion.id)+"+="+procesarExpresionNumerica(instruccion.valor)+";";
+    function procesarAsigacionSuma(instruccion, tablaDeSimbolos){
+        output+=procesarIdentificador(instruccion.id, tablaDeSimbolos)+"+="+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+";";
     }
-    function procesarAsigacionResta(instruccion){
-        output+=procesarIdentificador(instruccion.id)+"-="+procesarExpresionNumerica(instruccion.valor)+";";
+    function procesarAsigacionResta(instruccion, tablaDeSimbolos){
+        output+=procesarIdentificador(instruccion.id, tablaDeSimbolos)+"-="+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+";";
     }
     function setSalida(Errores){
         for(let error of Errores){
