@@ -160,8 +160,8 @@ class TS {
         else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
 
-    obtenerSimbolo(id) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
+    obtenerSimbolo(id, ambito) {
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito))[0];
         if (simbolo) return { valor: simbolo.valor, tipo: simbolo.tipo };
         else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
