@@ -170,6 +170,15 @@ class TS {
         if (funcion) return { tipo: funcion.tipo, parametros: funcion.parametros, accion: funcion.accion };
         else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
     }
+    obtenerType(id) {
+        const type = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="type")[0];
+        if (type) return { atributos:type.atributos };
+        else throw 'ERROR: no existe ningun type llamado: ' + id + '.';
+    }
+    existeType(id){
+        const type = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="type")[0];
+        if (type) return true;
+    }
     updateFuncionID(id,  newID) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
         if (funcion) {
