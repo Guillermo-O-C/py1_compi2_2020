@@ -159,6 +159,12 @@ class TS {
         if (simbolo) simbolo.valor = valor.valor;
         else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
+    actualizarAndType(id, valor) {
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
+        if (simbolo) simbolo.valor = valor.valor;
+        if (simbolo) simbolo.tipo = valor.tipo;
+        else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+    }
 
     obtenerSimbolo(id, ambito) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito))[0];

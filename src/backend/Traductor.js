@@ -439,13 +439,12 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                     funciones.push(instruccion);
                     output+=(ambito!="Global")?"//origen de la función "+instruccion.id+"\n":"";
                 }else{
-                        procesarBloque([instruccion], tablaDeSimbolos, instrucciones.id);
-                    
+                        procesarBloque([instruccion], tablaDeSimbolos, instrucciones.id);                    
                 }
             }
             output+="}\n"
             for(let funcion of  funciones){
-                                    procesarFuncion(funcion, tablaDeSimbolos, instrucciones.id);                    
+                procesarFuncion(funcion, tablaDeSimbolos, instrucciones.id);                    
             }
             //imprimir todas las funciones justo después de salir de la función padre
             //recorrer la función que se acaba de sacar para que saque a sus hijos

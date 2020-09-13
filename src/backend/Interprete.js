@@ -26,9 +26,15 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
                 procesarImpresion(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
-                procesarAccID(instruccion, tablaDeSimbolos, ambito);
-            }else if(instruccion.sentencia === SENTENCIAS.IF){
-                procesarImpresion(instruccion, tablaDeSimbolos, ambito);
+                procesarAccID(instruccion.id, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia === SENTENCIAS.IF){                
+                procesarIf(instruccion, tablaDeSimbolos, ambito);
+            }else if (instruccion.sentencia === SENTENCIAS.FOR) {
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice());
+                procesarFor(instruccion, tsFor, ambito);
+            }else if (instruccion.sentencia === SENTENCIAS.FOR_OF) {
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice());
+                procesarForOF(instruccion, tsFor, ambito);
             }
         }
     }
@@ -283,17 +289,17 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             temporal.push(procesarExpresionNumerica(temp.dato, tablaDeSimbolos, ambito));
             temp=temp.next_data;
         }
-        checkForMultyType(JSON.parse(JSON.stringify(temporal)));
+        checkForMultyType(JSON.parse(JSON.stringify(temporal)), tablaDeSimbolos, ambito);
         return {tipo:TIPO_DATO.ARRAY, valor:temporal};
     }
-    function checkForMultyType(arreglo){
+    function checkForMultyType(arreglo, tablaDeSimbolos, ambito){
         if(arreglo.length>1){
             let temp = arreglo.pop();
             for(let temporal of arreglo){
                 if(temp.tipo!=temporal.tipo){
                     arreglo.push(temp);
-                    consola.value+='>ERROR: No se permiten los arreglos multitype->\n'+JSON.stringify(arreglo);  
-                    throw '>ERROR: No se permiten los arreglos multitype'+JSON.stringify(arreglo);
+                    consola.value+='>ERROR: No se permiten los arreglos multitype->'+toString({valor:arreglo, tipo:TIPO_DATO.ARRAY}, tablaDeSimbolos, ambito);  
+                    throw '>ERROR: No se permiten los arreglos multitype'+toString({valor:arreglo, tipo:TIPO_DATO.ARRAY}, tablaDeSimbolos, ambito);
                 }
             }
         }
@@ -389,25 +395,53 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             }else if(temp.acc_type==TIPO_ACCESO.POSICION){//B
                 //comprobar que sea un array
                 if(!Array.isArray(principalValue.valor)){
-               // if(principalValue.tipo!=TIPO_DATO.ARRAY){
+                // if(principalValue.tipo!=TIPO_DATO.ARRAY){
                     consola.value+='>ERROR: Intento de acceso a posición de array inexistente\n';  
                     throw '>ERROR: Intento de acceso a posición de array inexistente\n';                    
                 }
-                let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito).valor;
-                if(valor>=principalValue.valor.length ||valor<0){
-                    consola.value+='>ERROR: No existe el elemento '+valor+' en el array\n';  
-                    throw '>ERROR: No existe el elemento '+valor+' en el array\n';             
+                let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito);
+                if(valor.tipo!="number"){
+                    consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
+                    throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
+                }
+                if(valor.valor>=principalValue.valor.length ||valor.valor<0){
+                    consola.value+='>ERROR: No existe el elemento '+valor.valor+' en el array.\n';  
+                    throw '>ERROR: No existe el elemento '+valor.valor+' en el array.\n';             
                 }
                 //comprobar que la posición no sea más larga que el length de la posición.
-                principalValue = principalValue.valor[valor];
+                principalValue = principalValue.valor[valor.valor];
                 side="both"
             }else if(temp.sentencia==SENTENCIAS.POP){//R
                 side="right";
+                if(!Array.isArray(principalValue.valor)){
+                    // if(principalValue.tipo!=TIPO_DATO.ARRAY){
+                    consola.value+='>ERROR: Intento de Pop a un array inexistente.\n';  
+                    throw '>ERROR: Intento de Pop a un array inexistente.\n';                    
+                }
+                if(principalValue.length==0){
+                    consola.value+='>ERROR: Intento de Pop a un array vacío.\n';  
+                    throw '>ERROR: Intento de Pop a un array vacío.\n'; 
+                }
+                principalValue=principalValue.valor.pop();
                 break;
             }else if(temp.sentencia==SENTENCIAS.LENGTH){//R
                 side="right";
+                if(!Array.isArray(principalValue.valor)){
+                    // if(principalValue.tipo!=TIPO_DATO.ARRAY){
+                    consola.value+='>ERROR: Intento de Length a un array inexistente.\n';  
+                    throw '>ERROR: Intento de Length a un array inexistente.\n';                    
+                }
+                principalValue={valor:principalValue.valor.length, tipo:"number"};
                 break;
             }else if(temp.sentencia==SENTENCIAS.PUSH){//N
+                if(!Array.isArray(principalValue.valor)){
+                    // if(principalValue.tipo!=TIPO_DATO.ARRAY){
+                    consola.value+='>ERROR: Intento de Push a un array inexistente.\n';  
+                    throw '>ERROR: Intento de Push a un array inexistente.\n';                    
+                }
+                let valor = procesarExpresionNumerica(temp.valor, tablaDeSimbolos, ambito);
+                principalValue.valor.push(valor);
+                checkForMultyType(principalValue.valor, tablaDeSimbolos, ambito);
                 side="none";
                 break;
             }
@@ -421,5 +455,57 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             ambitos.push(name.spli("_"));
         }
         return ambitos;
+    }
+    //SENTENCIAS DE CONTROL 
+    function procesarIf(instruccion, tablaDeSimbolos, ambito) {
+        const logica = procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito);
+        if (logica.valor) {
+            const tsIf = new TS(tablaDeSimbolos.simbolos.slice());
+            procesarBloque(instruccion.accion, tsIf, ambito);
+        } else {
+            if (instruccion.else != "Epsilon") {
+                if (instruccion.else.sentencia === SENTENCIAS.ELSE_IF) {
+                    const tsElIf = new TS(tablaDeSimbolos.simbolos.slice());
+                    procesarIf(instruccion.else, tsElIf, ambito);
+                } else {
+                    const tsElse = new TS(tablaDeSimbolos.simbolos.slice());
+                    procesarBloque(instruccion.else.accion, tsElse, ambito);
+                }
+            }
+        }
+    
+    }
+    function procesarFor(instruccion, tablaDeSimbolos, ambito) {
+        procesarBloque([instruccion.inicial], tablaDeSimbolos, ambito);
+       // const valor = procesarExpresionCadena(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
+        const valor = procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
+        tablaDeSimbolos.actualizar(instruccion.inicial.id, valor);
+        if (instruccion.paso.paso == "++") {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).valor) + 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
+                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            }
+        } else if (instruccion.paso.paso == "--") {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).valor) - 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
+                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            }
+        } else {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(procesarExpresionNumerica(instruccion.paso, tablaDeSimbolos, ambito).valor), tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
+                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            }
+    
+        }
+    
+    }
+    function procesarForOF(instruccion, tablaDeSimbolos, ambito){
+        let conjunto = procesarAccID(instruccion.conjunto, tablaDeSimbolos, ambito);
+        if(!Array.isArray(conjunto.valor)){
+            consola.value+='>ERROR: '+conjunto.id+' no es un array.\n';  
+            throw '>ERROR: '+conjunto.id+' no es un array.\n';               
+        }
+        tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, instruccion.variable, "infer",  "undefinied", ambito, "temp", "temp");
+        for(let val of conjunto.valor){
+            tablaDeSimbolos.actualizarAndType(instruccion.variable, val);
+            procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+        }
     }
 }
