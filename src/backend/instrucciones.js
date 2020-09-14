@@ -134,8 +134,9 @@ function crearType(id, atributos, fila, columna){
 }
 
 class TS {
-    constructor(simbolos) {
+    constructor(simbolos, consola) {
         this._simbolos = simbolos;
+        this._consola=consola;
     }
 
     agregar(var_type, id, tipo, valor, ambito, fila, columna) {
@@ -155,35 +156,45 @@ class TS {
 
     actualizar(id, valor) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
-        if (simbolo.tipo != valor.tipo) throw 'ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
+        if (simbolo.tipo != valor.tipo) {
+            if(simbolo.tipo.split("[]")[0]=="undefined"){
+                simbolo.tipo=valor.tipo;
+            }else{
+                this._consola.value+='ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
+                throw 'ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
+            }
+            }
         if (simbolo) simbolo.valor = valor.valor;
-        else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+        else {this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
     actualizarAndType(id, valor) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
         if (simbolo) simbolo.valor = valor.valor;
         if (simbolo) simbolo.tipo = valor.tipo;
-        else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+        else {this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
 
     obtenerSimbolo(id, ambito) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito))[0];
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si =="variable")[0];
         if (simbolo) return { valor: simbolo.valor, tipo: simbolo.tipo };
-        else throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+        else{ this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
-    obtenerFuncion(id) {
-        const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
-        if (funcion) return { tipo: funcion.tipo, parametros: funcion.parametros, accion: funcion.accion };
-        else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
+    getSimbol(id, ambito) {
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si=="variable")[0];
+        if (simbolo) return simbolo;
+        else{ this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
+    }
+    obtenerFuncion(id, ambito) {
+        const funcion = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="funcion")[0];
+        if (funcion){ 
+                return { tipo: funcion.tipo, parametros: funcion.parametros, accion: funcion.accion };
+            }
+        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
     obtenerType(id) {
         const type = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="type")[0];
         if (type) return { atributos:type.atributos };
-        else throw 'ERROR: no existe ningun type llamado: ' + id + '.';
-    }
-    existeType(id){
-        const type = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="type")[0];
-        if (type) return true;
+        else {this._consola.value+='ERROR: no existe ningun type llamado: ' + id + '.'; throw 'ERROR: no existe ningun type llamado: ' + id + '.';}
     }
     updateFuncionID(id,  newID) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
@@ -192,17 +203,17 @@ class TS {
             funcion.id=newID;
             return true;
         }
-        else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
+        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
     changeOldIDCall(id){
         const funcion = this._simbolos.filter(simbolo => simbolo.oldID === id)[0];
         if (funcion) {
             return funcion.id;
         }
-        else throw 'ERROR: no existe ninguna función llamada: ' + id + '.';
+        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
-    existe(id, ambito) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito)[0];
+    existe(id, ambito, si) {
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito && si==simbolo.si)[0];
         if (simbolo) return true;
         else return false;
     }
