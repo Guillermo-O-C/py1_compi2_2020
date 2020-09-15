@@ -155,7 +155,7 @@ class TS {
     }
 
     actualizar(id, valor) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
+        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="variable")[0];
         if (simbolo.tipo != valor.tipo) {
             if(simbolo.tipo.split("[]")[0]=="undefined"){
                 simbolo.tipo=valor.tipo;
@@ -164,9 +164,33 @@ class TS {
                 throw 'ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
             }
             }
-        if (simbolo) simbolo.valor = valor.valor;
-        else {this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
+        if (simbolo){
+            simbolo.valor = valor.valor;
+        }else{
+            this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.';
+            throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+        }
     }
+    /*
+    actualizar(id, valor, ambito) {
+        for(let amb of ambito){
+            const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.ambito == amb && simbolo.si=="variable")[0];
+            if (simbolo.tipo != valor.tipo) {
+                if(simbolo.tipo.split("[]")[0]=="undefined"){
+                    simbolo.tipo=valor.tipo;
+                }else{
+                    this._consola.value+='ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
+                    throw 'ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + simbolo.tipo;
+                }
+            }
+            if (simbolo){
+                simbolo.valor = valor.valor;
+            }
+        }
+        this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.';
+        throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
+    }
+    */
     actualizarAndType(id, valor) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id)[0];
         if (simbolo) simbolo.valor = valor.valor;

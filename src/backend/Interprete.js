@@ -8,7 +8,16 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         const tsGlobal = new TS([], consola);
         scanForFunctions(salida.AST, tsGlobal, "Global");
         scanForTypes(salida.AST, tsGlobal);
-        procesarBloque(salida.AST, tsGlobal, "Global");
+        let returnedAcction =  procesarBloque(salida.AST, tsGlobal, "Global");
+        if(returnedAcction!=undefined){
+            if(returnedAcction.sentencia===SENTENCIAS.BREAK){
+                consola.value+='>ERROR: Break fuera de un ciclo.';  
+                throw '>ERROR: Break fuera de un ciclo.';  
+            }else if(returnedAcction.sentencia===SENTENCIAS.RETURN){
+                consola.value+='>ERROR: Return fuera de una función.';  
+                throw '>ERROR:Return fuera de una función.';  
+            }
+        }
         traduccion.setValue(output);
         setSalida(salida.Errores);
         console.log(tsGlobal);
@@ -28,25 +37,62 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
                 procesarAccID(instruccion.id, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.IF){                
-                procesarIf(instruccion, tablaDeSimbolos, ambito);
+                let returnedAcction = procesarIf(instruccion, tablaDeSimbolos, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if (instruccion.sentencia === SENTENCIAS.FOR) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                procesarFor(instruccion, tsFor, ambito);
+                let returnedAcction = procesarFor(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if (instruccion.sentencia === SENTENCIAS.FOR_OF) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                procesarForOF(instruccion, tsFor, ambito);
+                let returnedAcction = procesarForOF(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if (instruccion.sentencia === SENTENCIAS.FOR_IN) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                procesarForIn(instruccion, tsFor, ambito);
+                let returnedAcction = procesarForIn(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if (instruccion.sentencia === SENTENCIAS.WHILE) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                procesarWhile(instruccion, tsFor, ambito);
+                let returnedAcction = procesarWhile(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if (instruccion.sentencia === SENTENCIAS.DO_WHILE) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                procesarDoWhile(instruccion, tsFor, ambito);
+                let returnedAcction = procesarDoWhile(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if(instruccion.sentencia === SENTENCIAS.LLAMADA){ 
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);               
                 procesarLlamada(instruccion, tsFor, ambito);
+            }else if(instruccion.sentencia===SENTENCIAS.INCREMENTO){
+                procesarUnicambios(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia===SENTENCIAS.DECREMENTO  ){
+                procesarUnicambios(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia===SENTENCIAS.ASIGNACION_SUMA  ){
+                procesarUnicambios(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia===SENTENCIAS.ASIGNACION_RESTA  ){
+                procesarUnicambios(instruccion, tablaDeSimbolos, ambito);
+            }else if(instruccion.sentencia === SENTENCIAS.SWITCH){ 
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);               
+                procesarSwitch(instruccion, tsFor, ambito);
+            }else if(instruccion.sentencia===SENTENCIAS.BREAK){
+                return {sentencia:SENTENCIAS.BREAK};
+            }else if(instruccion.sentencia===SENTENCIAS.RETURN){
+                if(instruccion.valor=="Epsilon"){
+                    return {sentencia:SENTENCIAS.RETURN, valor:"undefined"};
+                }else{
+                    return {sentencia:SENTENCIAS.RETURN, valor:procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito)};
+                }
             }
         }
     }
@@ -133,6 +179,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
     function procesarAsigacion(instruccion, tablaDeSimbolos, ambito){
         let assignedValue = procesarExpresionNumerica(instruccion.expresion, tablaDeSimbolos, ambito);
         let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito));
+        if(principalValue.var_type==TIPO_VARIABLE.CONST && instruccion.id.acc=="Epsilon"){
+            consola.value+='>ERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
+            throw '>ERROR:  No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';   
+        }
         let temp = instruccion.id.acc;
         let side="right";
         while(temp!="Epsilon"){
@@ -163,8 +213,13 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                     throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
                 }
                 if(valor.valor>=principalValue.valor.length ||valor.valor<0){
-                    consola.value+='>ERROR: No existe el elemento '+valor.valor+' en el array.\n';  
-                    throw '>ERROR: No existe el elemento '+valor.valor+' en el array.\n';             
+                    //consola.value+='>ERROR: No existe el elemento '+valor.valor+' en el array.\n';  
+                    //throw '>ERROR: No existe el elemento '+valor.valor+' en el array.\n'; 
+                   /* while(principalValue.valor.length!=valor.valor-1){
+                        principalValue.valor.push();
+                    }   */         
+                    principalValue.valor[valor.valor]=assignedValue;
+                    return;
                 }
                 //comprobar que la posición no sea más larga que el length de la posición.
                 principalValue = principalValue.valor[valor.valor];
@@ -224,10 +279,20 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 }
             }
             text+="}";
+        }else if(cadena.tipo==="string"){
+            text+=sustituirEscapes(cadena);
         }else{
             text+=cadena.valor;
         }
         return text;
+    }
+    function sustituirEscapes(cadena){
+        cadena.valor=String(cadena.valor).replace(/\\n/g,'\n')
+        cadena.valor=String(cadena.valor).replace(/\\t/g,'\t')
+        cadena.valor=String(cadena.valor).replace(/\\r/g,'\r')
+        cadena.valor=String(cadena.valor).replace(/\\"/g,'\"')
+        cadena.valor=String(cadena.valor).replace(/\\\\"/g,'\\')
+        return cadena.valor;
     }
     function crearSimbolo(var_type, id, data_type, valor, ambito, tablaDeSimbolos, fila, columna){
         //Verificar que no exista en el mismo ámbito
@@ -275,8 +340,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
     }
     function procesarExpresionNumerica(expresion, tablaDeSimbolos, ambito) {
         if (expresion.sentencia === SENTENCIAS.LLAMADA) {
-         //   const valor = procesarFuncion(expresion, tablaDeSimbolos);
-            //return valor;
+            const valor = procesarLlamada(expresion, tablaDeSimbolos, ambito);
+            return valor;
         } else if (expresion.tipo === TIPO_OPERACION.NEGATIVO) {
             const valor = procesarExpresionNumerica(expresion.operandoIzq, tablaDeSimbolos, ambito).valor;
             return { valor: valor * -1, tipo: "number" };
@@ -445,7 +510,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                         let flag2=true;
                         for(let atb of type.atributos){
                             //para que acepte los null;
-                            if(atb.id==attribute.id && atb.tipo==attribute.tipo){
+                            if(atb.id==attribute.id && atb.tipo==attribute.tipo || atb.id==attribute.id && atb.tipo=="infer"){
                                 flag2=true;
                                 break;
                             }else{
@@ -516,11 +581,11 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 if(valor.tipo!="number"){
                     consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
                     throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
-                }
+                }/*
                 if(valor.valor>=principalValue.valor.length ||valor.valor<0){
                     consola.value+='>ERROR: No existe el elemento '+valor.valor+' en el array.\n';  
                     throw '>ERROR: No existe el elemento '+valor.valor+' en el array.\n';             
-                }
+                }*/
                 //comprobar que la posición no sea más larga que el length de la posición.
                 principalValue = principalValue.valor[valor.valor];
                 side="both"
@@ -593,13 +658,28 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 for(let i = 0; i < funcion.parametros.length;i++){
                     if(funcion.parametros[i].tipo=="infer" || funcion.parametros[i].tipo==argumentos[i].tipo){
                         //se acepta el argumento para ser usado por los parámetros
-                        tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, ambito, "temp", "temp");
+                        tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                     }else{
                         consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                         throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                     }
+                }               
+                let returnedAcction = procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
+                if(returnedAcction!=undefined){
+                    /*if(returnedAcction.sentencia===SENTENCIAS.BREAK){
+                        consola.value+='>ERROR: Break fuera de un ciclo.';  
+                        throw '>ERROR: Break fuera de un ciclo.';  
+                    }else*/
+                    if(returnedAcction.sentencia===SENTENCIAS.RETURN){
+                        if(returnedAcction.valor=="undefined" && funcion.tipo=="void"){
+                            //todo bien
+                        }else if(returnedAcction.valor.tipo!=funcion.tipo){
+                            consola.value+='>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.';  
+                            throw '>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.'; 
+                        } 
+                        return returnedAcction.valor; 
+                    }
                 }
-                procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
                 //declarar parámetros con los valores de los argumentos
             }
         }else{
@@ -630,20 +710,106 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
         return argumentos;
     }
+    function procesarUnicambios(instruccion, tablaDeSimbolos, ambito){
+        let principalValue=getPrincipalValue(instruccion, tablaDeSimbolos, ambito)
+        if(principalValue.tipo!="number"){
+            consola.value+='>ERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';  
+            throw '>ERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';    
+        }else if(instruccion.sentencia==SENTENCIAS.INCREMENTO){
+            principalValue.valor++;
+        }else if(instruccion.sentencia==SENTENCIAS.DECREMENTO){
+            principalValue.valor--;
+        }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_SUMA){
+            let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
+            if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
+                principalValue.valor+=valor.valor;
+            }else{
+                consola.value+='>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
+            }
+        }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_RESTA){
+            let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
+            if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
+                principalValue.valor+=valor.valor;
+            }else{
+                consola.value+='>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
+            }        
+        }
+    }
+    function getPrincipalValue(instruccion, tablaDeSimbolos,ambito){
+        let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito));
+        if(principalValue.var_type==TIPO_VARIABLE.CONST && instruccion.id.acc=="Epsilon"){
+            consola.value+='>ERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
+            throw '>ERROR:  No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';   
+        }
+        let temp = instruccion.id.acc;
+        let side="right";
+        while(temp!="Epsilon"){
+            if(temp.acc_type==TIPO_ACCESO.ATRIBUTO){//B
+                //comprobar que exista la propiedad
+                let value = ExistingAttribute(principalValue.tipo, temp.atributo, tablaDeSimbolos);
+                //comprobar que el valor sea del mismo tipo del atributo o null
+                if(value == false){
+                    consola.value+='>ERROR: No existe el atributo '+temp.atributo+'\n';  
+                    throw '>ERROR: No existe el atributo '+temp.atributo+'\n';
+                }
+                for(let attribute of principalValue.valor){
+                    if(attribute.id==temp.atributo){
+                        principalValue=attribute.valor;
+                    }
+                }
+                side="both";
+            }else if(temp.acc_type==TIPO_ACCESO.POSICION){//B
+                //comprobar que sea un array
+                if(!Array.isArray(principalValue.valor)){
+                // if(principalValue.tipo!=TIPO_DATO.ARRAY){
+                    consola.value+='>ERROR: Intento de acceso a posición de array inexistente\n';  
+                    throw '>ERROR: Intento de acceso a posición de array inexistente\n';                    
+                }
+                let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito);
+                if(valor.tipo!="number"){
+                    consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
+                    throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
+                }/*
+                if(valor.valor>=principalValue.valor.length ||valor.valor<0){
+                    consola.value+='>ERROR: No existe el elemento '+valor.valor+' en el array.\n';  
+                    throw '>ERROR: No existe el elemento '+valor.valor+' en el array.\n';             
+                }*/
+                //comprobar que la posición no sea más larga que el length de la posición.
+                principalValue = principalValue.valor[valor.valor];
+                side="both"
+            }else {
+                consola.value+='>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';  
+                throw '>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';
+            }
+            temp=temp.next_acc;
+        }
+        return principalValue;
+    }
     //SENTENCIAS DE CONTROL 
     function procesarIf(instruccion, tablaDeSimbolos, ambito) {
         const logica = procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito);
         if (logica.valor) {
             const tsIf = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-            procesarBloque(instruccion.accion, tsIf, ambito);
+            let returnedAcction = procesarBloque(instruccion.accion, tsIf, ambito);
+            if(returnedAcction!=undefined){
+                return returnedAcction;
+            }
         } else {
             if (instruccion.else != "Epsilon") {
                 if (instruccion.else.sentencia === SENTENCIAS.ELSE_IF) {
                     const tsElIf = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                    procesarIf(instruccion.else, tsElIf, ambito);
+                    let returnedAcction = procesarIf(instruccion.else, tsElIf, ambito);
+                    if(returnedAcction!=undefined){
+                        return returnedAcction;
+                    }
                 } else {
                     const tsElse = new TS(tablaDeSimbolos.simbolos.slice(), consola);
-                    procesarBloque(instruccion.else.accion, tsElse, ambito);
+                    let returnedAcction = procesarBloque(instruccion.else.accion, tsElse, ambito);
+                    if(returnedAcction!=undefined){
+                        return returnedAcction;
+                    }
                 }
             }
         }
@@ -653,18 +819,42 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         procesarBloque([instruccion.inicial], tablaDeSimbolos, ambito);
        // const valor = procesarExpresionCadena(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
         const valor = procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
-        tablaDeSimbolos.actualizar(instruccion.inicial.id, valor);
+        tablaDeSimbolos.actualizar(instruccion.inicial.id, valor);//, SplitAmbitos(ambito)
         if (instruccion.paso.paso == "++") {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).valor) + 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
-                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).valor) + 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+                let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                        break;
+                    }else{
+                        return returnedAcction;
+                    } 
+                }                
             }
         } else if (instruccion.paso.paso == "--") {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).valor) - 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
-                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).valor) - 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+                let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                        break;
+                    }else{
+                        return returnedAcction;
+                    } 
+                }
             }
         } else {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(procesarExpresionNumerica(instruccion.paso.paso, tablaDeSimbolos, ambito).valor), tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, ambito).tipo })) {
-                procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(procesarExpresionNumerica(instruccion.paso.paso, tablaDeSimbolos, ambito).valor), tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+                let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                        break;
+                    }else{
+                        return returnedAcction;
+                    } 
+                }
             }
     
         }
@@ -679,7 +869,15 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, instruccion.variable, "infer",  "undefined", ambito, "temp", "temp");
         for(let val of conjunto.valor){
             tablaDeSimbolos.actualizarAndType(instruccion.variable, val);
-            procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+            let returnedAcction = procesarBloque(instruccion.accion, tsFor, ambito);
+            if(returnedAcction!=undefined){
+                if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                    break;
+                }else{
+                    return returnedAcction;
+                } 
+            }
         }
     }
     function procesarForIn(instruccion, tablaDeSimbolos, ambito){
@@ -691,17 +889,46 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, instruccion.variable, "infer",  "undefined", ambito, "temp", "temp");
         for(let val in conjunto.valor){
             tablaDeSimbolos.actualizarAndType(instruccion.variable, {valor:val, tipo:"number"});
-            procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+            let returnedAcction = procesarBloque(instruccion.accion, tsFor, ambito);
+            if(returnedAcction!=undefined){
+                if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                    break;
+                }else{
+                    return returnedAcction;
+                } 
+            }
         }
     }
     function procesarWhile(instruccion ,tablaDeSimbolos, ambito){
         while(procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito).valor){
-            procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+            let returnedAcction = procesarBloque(instruccion.accion, tsFor, ambito);
+            if(returnedAcction!=undefined){
+                if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                    break;
+                }else{
+                    return returnedAcction;
+                } 
+            }
         }
     }
     function procesarDoWhile(instruccion ,tablaDeSimbolos, ambito){
         do{
-            procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
+            const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+            let returnedAcction = procesarBloque(instruccion.accion, tsFor, ambito);
+            if(returnedAcction!=undefined){
+                if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                    break;
+                }else{
+                    return returnedAcction;
+                } 
+            }
         }while(procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito).valor);
     }
+    function procesarSwitch(instruccion, tablaDeSimbolos, ambito){
+
+    }
+    //SENTENCIAS DE TRANSFERENCIA
+
 }

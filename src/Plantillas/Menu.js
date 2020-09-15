@@ -387,7 +387,7 @@ export default function UI() {
       <Grid container spacing={2}>
           <Grid item xs={6}>
             <Paper className={classes.paper}>CONSOLA</Paper>
-            <textarea disabled id="consola" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75", color:"#ffff", fontSize: "18px"}} ></textarea>
+            <textarea disabled id="consola" style={{width:"100%", height:"50vh", resize: "none", backgroundColor:"#0f4c75", color:"#ffff"}} ></textarea>
 
           </Grid> 
           <Grid item xs={6}>

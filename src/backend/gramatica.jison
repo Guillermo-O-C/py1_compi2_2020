@@ -97,8 +97,10 @@
 
 /* Asociación de operadores y precedencia */
 %left 'OPERADOR_TERNARIO'
-%left 'AND' 'OR'
-%left 'IGUALDAD' 'MENOR' 'MENOR_IGUAL' 'MAYOR' 'MAYOR_IGUAL' 'DISTINTO'
+%left 'OR'
+%left 'AND'
+%left 'IGUALDAD' 'DISTINTO'
+%left 'MENOR' 'MENOR_IGUAL' 'MAYOR' 'MAYOR_IGUAL'
 %left 'MAS' 'MENOS'
 %left 'MULTIPLICACION' 'DIVISION'
 %left 'POTENCIA' 'MODULO'
@@ -305,8 +307,8 @@ elseIf_P
 	| ABRIR_LLAVE sentencias CERRAR_LLAVE {$$ =  instruccionesAPI.nuevoElse($2);}
 ;
 cases
-	: R_CASE expresion DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE cases {$$=instruccionesAPI.nuevoCase($2, $5, $7);} 
-	| R_DEFAULT DOS_PUNTOS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoDefault($4);}
+	: R_CASE expresion DOS_PUNTOS  sentencias  cases {$$=instruccionesAPI.nuevoCase($2, $4, $5);} 
+	| R_DEFAULT DOS_PUNTOS  sentencias  {$$=instruccionesAPI.nuevoDefault($3);}
 	| {$$="Epsilon";}
 ;
 for_init	
