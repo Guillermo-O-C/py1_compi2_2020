@@ -175,9 +175,14 @@ class TS {
     }
 
     obtenerSimbolo(id, ambito) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si =="variable")[0];
-        if (simbolo) return { valor: simbolo.valor, tipo: simbolo.tipo };
-        else{ this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
+        for(let amb of ambito){
+            const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && amb==simbolo.ambito && simbolo.si =="variable")[0];
+            if (simbolo){
+                return { valor: simbolo.valor, tipo: simbolo.tipo }
+            };
+        }
+        this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.';
+        throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
     getSimbol(id, ambito) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si=="variable")[0];

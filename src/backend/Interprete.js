@@ -87,7 +87,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         let tempAtributos = [];
         let temp = atributos;
         while(temp!="Epsilon"){
-            tempAtributos.push({id:temp.id, tipo: procesarDataType(temp.tipo)});
+            tempAtributos.push({id:temp.id, tipo: procesarDataType(temp.data_type)});
             temp=temp.next;
         }
         return tempAtributos;
@@ -131,7 +131,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
     }
     function procesarAsigacion(instruccion, tablaDeSimbolos, ambito){
-        let assignedValue = procesarExpresionNumerica(instruccion.expresion);
+        let assignedValue = procesarExpresionNumerica(instruccion.expresion, tablaDeSimbolos, ambito);
         let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito));
         let temp = instruccion.id.acc;
         let side="right";
@@ -215,7 +215,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 }
             }
             text+="]";
-        }else if(tablaDeSimbolos.existe(cadena.tipo, ambito, "type")){
+        }else if(tablaDeSimbolos.existe(cadena.tipo, undefined, "type")){
             text+="{";
             for(let i = 0;i<cadena.valor.length;i++){
                 text+=cadena.valor[i].id+":"+toString(cadena.valor[i].valor, tablaDeSimbolos, ambito);
@@ -347,6 +347,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             return { valor: !valorIzq, tipo: "boolean" };
         } else if (expresion.tipo === TIPO_VALOR.NUMERO) {
             return { valor: expresion.valor, tipo: "number"};
+        } else if (expresion.tipo === TIPO_VALOR.DECIMAL) {
+            return { valor: expresion.valor, tipo: "number"};
         }else if (expresion.tipo === TIPO_VALOR.TRUE) {
             return { valor: true, tipo: "boolean" };
         } else if (expresion.tipo === TIPO_VALOR.FALSE) {
@@ -364,6 +366,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         } else if (expresion.tipo === TIPO_DATO.OBJETO) {
             return procesarObjeto(expresion, tablaDeSimbolos, ambito);
         } else if (expresion.tipo === TIPO_VALOR.CADENA) {
+            return { valor: expresion.valor, tipo: "string" };
+        } else if (expresion.tipo === TIPO_VALOR.CADENA_CHARS) {
+            return { valor: expresion.valor, tipo: "string" };
+        } else if (expresion.tipo === TIPO_VALOR.CADENA_EJECUTABLE) {
             return { valor: expresion.valor, tipo: "string" };
         } else {
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
@@ -426,7 +432,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         let temp = instruccion.atributos;
         while(temp!="Epsilon"){
             let valor = procesarExpresionNumerica(temp.valor, tablaDeSimbolos, ambito);
-            attb.push({id:temp.id, valor:valor, tipo:valor.tipo+calcularDimensiones(valor.valor)});
+            attb.push({id:temp.id, valor:valor, tipo:valor.tipo});
             temp=temp.next;
         }
         //buscar type
@@ -439,7 +445,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                         let flag2=true;
                         for(let atb of type.atributos){
                             //para que acepte los null;
-                            if(atb.id==attribute.id && atb.data_type.type==attribute.data_type.type&& atb.data_type.dimensiones==attribute.data_type.dimensiones/**/){
+                            if(atb.id==attribute.id && atb.tipo==attribute.tipo){
                                 flag2=true;
                                 break;
                             }else{
@@ -557,11 +563,21 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         return {valor: principalValue.valor, side:side, tipo:principalValue.tipo};   
     }
     function SplitAmbitos(name){
-        let ambitos=["Global"];
-        if(name!="Global"){
-            ambitos.push(name.spli("_"));
+        let er=[];
+        let ar = name.split("_");
+        for(let i =1;i<=ar.length;i++){
+            let x="";
+            for(let e =1;e<=i;e++){
+                if(e==1){
+                    x=ar[ar.length-e]
+                }else{          
+                    x=ar[ar.length-e]+"_"+x;
+                }              
+            }
+            er.push(x);
         }
-        return ambitos;
+            er.push("Global")
+        return er;
     }
     function procesarLlamada(instruccion, tablaDeSimbolos, ambito){
         let funcion = tablaDeSimbolos.obtenerFuncion(instruccion.id);
@@ -573,16 +589,19 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
                 throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
             }else{
-                let argumentos = getArguments(instruccion.parametros);
+                let argumentos = getArguments(instruccion.parametros, tablaDeSimbolos, ambito);
                 for(let i = 0; i < funcion.parametros.length;i++){
                     if(funcion.parametros[i].tipo=="infer" || funcion.parametros[i].tipo==argumentos[i].tipo){
-
+                        //se acepta el argumento para ser usado por los parámetros
+                        tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, ambito, "temp", "temp");
                     }else{
                         consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                         throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                     }
                 }
-            }            
+                procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
+                //declarar parámetros con los valores de los argumentos
+            }
         }else{
             consola.value+='>ERROR: No se puede ejecutar '+instruccion.id+' desde el ámbito '+ambito+'.\n';  
             throw '>ERROR: No se puede ejecutar '+instruccion.id+' desde el ámbito '+ambito+'.\n'; 
@@ -606,7 +625,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         let argumentos = [];
         let temp = instruccion;
         while(temp!="Epsilon"){
-            argumentos.push(procesarExpresionNumerica(temp.expresion));
+            argumentos.push(procesarExpresionNumerica(temp.expresion, tablaDeSimbolos, ambito));
             temp=temp.siguiente;
         }
         return argumentos;
