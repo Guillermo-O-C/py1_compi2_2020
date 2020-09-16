@@ -3,9 +3,9 @@ import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR, T
 export default function Ejecutar(salida, consola, traduccion, printedTable){
    // console.log("this is the output"+  JSON.stringify(salida.AST)); 
    let output="";
+   const tsGlobal = new TS([], consola);
    try {
-        consola.value="";
-        const tsGlobal = new TS([], consola);
+        consola.value="";        
         scanForFunctions(salida.AST, tsGlobal, "Global");
         scanForTypes(salida.AST, tsGlobal);
         let returnedAcction =  procesarBloque(salida.AST, tsGlobal, "Global");
@@ -16,6 +16,9 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             }else if(returnedAcction.sentencia===SENTENCIAS.RETURN){
                 consola.value+='>ERROR: Return fuera de una función.';  
                 throw '>ERROR:Return fuera de una función.';  
+            }else if(returnedAcction.sentencia===SENTENCIAS.CONTINUE){
+                consola.value+='>ERROR: Continue fuera de un ciclo.';  
+                throw '>ERROR: Continue fuera de un ciclo.';  
             }
         }
         traduccion.setValue(output);
@@ -87,6 +90,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 procesarSwitch(instruccion, tsFor, ambito);
             }else if(instruccion.sentencia===SENTENCIAS.BREAK){
                 return {sentencia:SENTENCIAS.BREAK};
+            }else if(instruccion.sentencia===SENTENCIAS.CONTINUE){
+                return {sentencia:SENTENCIAS.CONTINUE};
             }else if(instruccion.sentencia===SENTENCIAS.RETURN){
                 if(instruccion.valor=="Epsilon"){
                     return {sentencia:SENTENCIAS.RETURN, valor:"undefined"};
@@ -197,6 +202,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 for(let attribute of principalValue.valor){
                     if(attribute.id==temp.atributo){
                         principalValue=attribute.valor;
+                        if(principalValue.valor==null){
+                            //no estoy seguro si hacerlo así o solo pasarle el tipo
+                            principalValue.valor=assignedValue.valor;
+                            principalValue.tipo=assignedValue.tipo;
+                            return;
+                        }
                     }
                 }
                 side="both";
@@ -243,17 +254,6 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
         //obtener el valor a cambiar y ver que  no sea const
         //
-    }
-    function procesarExpresionCadena(expresion, tablaDeSimbolos, ambito) {
-        if (expresion.tipo === TIPO_OPERACION.SUMA) {
-            const cadIzq = procesarExpresionCadena(expresion.operandoIzq, tablaDeSimbolos, ambito).valor;
-            const cadDer = procesarExpresionCadena(expresion.operandoDer, tablaDeSimbolos, ambito).valor;
-            return { valor: cadIzq + cadDer, tipo: "string" };
-        } else if (expresion.tipo === TIPO_VALOR.CADENA) {
-            return { valor: expresion.valor, tipo: "string" };
-        } else {
-            return procesarExpresionNumerica(expresion, tablaDeSimbolos, ambito);
-        }
     }
     function procesarImpresion(instruccion, tablaDeSimbolos, ambito){
         const cadena = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
@@ -510,7 +510,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                         let flag2=true;
                         for(let atb of type.atributos){
                             //para que acepte los null;
-                            if(atb.id==attribute.id && atb.tipo==attribute.tipo || atb.id==attribute.id && atb.tipo=="infer"){
+                            if(atb.id==attribute.id && atb.tipo==attribute.tipo || atb.id==attribute.id && atb.tipo=="infer" || atb.id==attribute.id && attribute.valor.valor==null){
+                                if(attribute.valor.valor==null){
+                                    attribute.tipo=atb.tipo;
+                                }
                                 flag2=true;
                                 break;
                             }else{
@@ -564,9 +567,14 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                     consola.value+='>ERROR: No existe el atributo '+temp.atributo+'\n';  
                     throw '>ERROR: No existe el atributo '+temp.atributo+'\n';
                 }
+                //para cuando sean atributos nulos
+                if(principalValue.valor==null && tablaDeSimbolos.existe(principalValue.tipo, undefined, "type")){
+                    break;
+                }
                 for(let attribute of principalValue.valor){
                     if(attribute.id==temp.atributo){
                         principalValue=attribute.valor;
+                        principalValue.tipo=value.tipo;
                     }
                 }
                 side="both";
@@ -655,16 +663,20 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
             }else{
                 let argumentos = getArguments(instruccion.parametros, tablaDeSimbolos, ambito);
+                const tsFuncion = new TS(tsGlobal.simbolos.slice(), consola);
                 for(let i = 0; i < funcion.parametros.length;i++){
                     if(funcion.parametros[i].tipo=="infer" || funcion.parametros[i].tipo==argumentos[i].tipo){
                         //se acepta el argumento para ser usado por los parámetros
-                        tablaDeSimbolos.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
+                        tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
+                    }else if(tablaDeSimbolos.existe(funcion.parametros[i].tipo, undefined, "type") && argumentos[i].valor==null){
+                        //para que acepte los nulls    
+                        tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, funcion.parametros[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                     }else{
                         consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                         throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                     }
                 }               
-                let returnedAcction = procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
+                let returnedAcction = procesarBloque(funcion.accion, tsFuncion, instruccion.id);
                 if(returnedAcction!=undefined){
                     /*if(returnedAcction.sentencia===SENTENCIAS.BREAK){
                         consola.value+='>ERROR: Break fuera de un ciclo.';  
@@ -827,6 +839,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 if(returnedAcction!=undefined){
                     if(returnedAcction.sentencia==SENTENCIAS.BREAK){
                         break;
+                    }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                        continue;
                     }else{
                         return returnedAcction;
                     } 
@@ -874,6 +888,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             if(returnedAcction!=undefined){
                 if(returnedAcction.sentencia==SENTENCIAS.BREAK){
                     break;
+                }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                    continue;
                 }else{
                     return returnedAcction;
                 } 
@@ -894,6 +910,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             if(returnedAcction!=undefined){
                 if(returnedAcction.sentencia==SENTENCIAS.BREAK){
                     break;
+                }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                    continue;
                 }else{
                     return returnedAcction;
                 } 
@@ -907,6 +925,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             if(returnedAcction!=undefined){
                 if(returnedAcction.sentencia==SENTENCIAS.BREAK){
                     break;
+                }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                    continue;
                 }else{
                     return returnedAcction;
                 } 
@@ -920,6 +940,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             if(returnedAcction!=undefined){
                 if(returnedAcction.sentencia==SENTENCIAS.BREAK){
                     break;
+                }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                    continue;
                 }else{
                     return returnedAcction;
                 } 
@@ -927,8 +949,49 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }while(procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito).valor);
     }
     function procesarSwitch(instruccion, tablaDeSimbolos, ambito){
-
+        let cases =  getCases(instruccion.cases);
+        for(let i = 0;i<cases.length;i++){
+            if(cases[i].logica=="default"){
+                const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+                let returnedAcction = procesarBloque(cases[i].accion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                        break;
+                    }else{
+                        return returnedAcction;
+                    } 
+                } 
+                break;
+            }else{
+                let original = procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito);
+                let caso= procesarExpresionNumerica(cases[i].logica, tablaDeSimbolos, ambito);
+                if(original.valor==caso.valor){
+                    const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
+                    let returnedAcction = procesarBloque(cases[i].accion, tsFor, ambito);
+                    if(returnedAcction!=undefined){
+                        if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                            break;
+                        }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                            continue;
+                        }else{
+                            return returnedAcction;
+                        } 
+                    } 
+                }
+            }
+        }
     }
-    //SENTENCIAS DE TRANSFERENCIA
-
+    function getCases(cases){
+        let arreglo = [];
+        let temp=cases;
+        while(temp!="Epsilon"){
+            arreglo.push(temp);
+            temp=temp.next_case;
+            if(temp.logica=="default"){
+                arreglo.push(temp);
+                break;
+            }
+        }
+        return arreglo;
+    }
 }
