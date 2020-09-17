@@ -130,27 +130,27 @@ case 14:
   this.$ = instruccionesAPI.nuevaFuncion($$[$0-3], $$[$0-8], $$[$0-6], $$[$0-1], _$[$0-8].first_line, _$[$0-8].first_column); 
 break;
 case 15: case 37:
-this.$ = instruccionesAPI.nuevaLlamada($$[$0-4], $$[$0-2]);
+this.$ = instruccionesAPI.nuevaLlamada($$[$0-4], $$[$0-2], _$[$0-4].first_column, _$[$0-4].first_line);
 break;
 case 16: case 38:
 this.$=instruccionesAPI.nuevoReturn($$[$0-1]);
 break;
-case 17: case 39: case 122:
-this.$ = instruccionesAPI.nuevaAsignacion($$[$0-3], $$[$0-1]);
+case 17: case 39:
+this.$ = instruccionesAPI.nuevaAsignacion($$[$0-3], $$[$0-1], _$[$0-3].first_column, _$[$0-3].first_line);
 break;
 case 18:
-this.$=instruccionesAPI.nuevoIncremento($$[$0-2]);
+this.$=instruccionesAPI.nuevoIncremento($$[$0-2], _$[$0-2].first_column, _$[$0-2].first_line);
 break;
 case 19:
-this.$=instruccionesAPI.nuevoDecremento($$[$0-2]);
+this.$=instruccionesAPI.nuevoDecremento($$[$0-2], _$[$0-2].first_column, _$[$0-2].first_line);
 break;
 case 20: case 42:
-this.$=instruccionesAPI.nuevoAsignacioSuma($$[$0-3], $$[$0-1]);
+this.$=instruccionesAPI.nuevoAsignacioSuma($$[$0-3], $$[$0-1], _$[$0-3].first_column, _$[$0-3].first_line);
 break;
 case 21: case 43:
-this.$=instruccionesAPI.nuevoAsignacioResta($$[$0-3], $$[$0-1]);
+this.$=instruccionesAPI.nuevoAsignacioResta($$[$0-3], $$[$0-1], _$[$0-3].first_column, _$[$0-3].first_line);
 break;
-case 22: case 44:
+case 22:
 this.$=instruccionesAPI.nuevoAcceso($$[$0-1]);
 break;
 case 23: case 45:
@@ -166,10 +166,13 @@ case 27:
  this.$ = [$$[$0]]; 
 break;
 case 40:
-this.$=instruccionesAPI.nuevoIncremento($$[$0-2], $$[$0-1]);
+this.$=instruccionesAPI.nuevoIncremento($$[$0-2], $$[$0-1], _$[$0-2].first_column, _$[$0-2].first_line);
 break;
 case 41:
-this.$=instruccionesAPI.nuevoDecremento($$[$0-2], $$[$0-1]);
+this.$=instruccionesAPI.nuevoDecremento($$[$0-2], $$[$0-1], _$[$0-2].first_column, _$[$0-2].first_line);
+break;
+case 44:
+this.$=instruccionesAPI.nuevoAcceso($$[$0-1], _$[$0-1].first_column, _$[$0-1].first_line);
 break;
 case 48:
  this.$ = instruccionesAPI.nuevaOperacionUnaria($$[$0], TIPO_OPERACION.NEGATIVO); 
@@ -247,10 +250,10 @@ case 72:
  this.$ = instruccionesAPI.nuevoValor($$[$0], TIPO_VALOR.CADENA_EJECUTABLE); 
 break;
 case 73:
- this.$ = instruccionesAPI.nuevoObjeto($$[$0]); 
+ this.$ = instruccionesAPI.nuevoObjeto($$[$0], _$[$0].first_column, _$[$0].first_line); 
 break;
 case 74:
- this.$ = instruccionesAPI.nuevoArray($$[$0-1]); 
+ this.$ = instruccionesAPI.nuevoArray($$[$0-1], _$[$0-1].first_column, _$[$0-1].first_line); 
 break;
 case 75:
 this.$=instruccionesAPI.nuevoValor($$[$0], TIPO_VALOR.IDENTIFICADOR);
@@ -261,11 +264,14 @@ break;
 case 77:
 this.$ = instruccionesAPI.nuevoValor($$[$0], TIPO_VALOR.NULL);
 break;
-case 78: case 80:
-this.$ = instruccionesAPI.nuevoArgumento($$[$0-1], $$[$0]);
+case 78:
+this.$ = instruccionesAPI.nuevoArgumento($$[$0-1], $$[$0], _$[$0-1].first_column, _$[$0-1].first_line);
 break;
 case 79:
 this.$ = "Epsilon";
+break;
+case 80:
+this.$ = instruccionesAPI.nuevoArgumento($$[$0-1], $$[$0] , _$[$0-1].first_column, _$[$0-1].first_line);
 break;
 case 81:
 this.$ =  "Epsilon";
@@ -344,6 +350,9 @@ break;
 case 121:
 this.$ = instruccionesAPI.nuevaDeclaracion($$[$0-5], $$[$0-4], $$[$0-3], $$[$0-1], "Epsilon");
 break;
+case 122:
+this.$ = instruccionesAPI.nuevaAsignacion($$[$0-3], $$[$0-1]);
+break;
 case 126: case 128:
 this.$=instruccionesAPI.nuevoParametro($$[$0-1], $$[$0-2], $$[$0]);
 break;
@@ -354,22 +363,22 @@ case 133:
 this.$="false";
 break;
 case 134:
-this.$=instruccionesAPI.nuevaReferencia($$[$0-1], $$[$0]);
+this.$=instruccionesAPI.nuevaReferencia($$[$0-1], $$[$0], _$[$0-1].first_column, _$[$0-1].first_line);
 break;
 case 135:
-this.$=instruccionesAPI.nuevoAccPosicion($$[$0-2], $$[$0]);
+this.$=instruccionesAPI.nuevoAccPosicion($$[$0-2], $$[$0], _$[$0-3].first_column, _$[$0-3].first_line);
 break;
 case 136:
-this.$=instruccionesAPI.nuevoAccAtributo($$[$0-1], $$[$0]);
+this.$=instruccionesAPI.nuevoAccAtributo($$[$0-1], $$[$0], _$[$0-1].first_column, _$[$0-1].first_line);
 break;
 case 137:
-this.$=instruccionesAPI.nuevoPop();
+this.$=instruccionesAPI.nuevoPop(_$[$0-2].first_column, _$[$0-2].first_line);
 break;
 case 138:
-this.$=instruccionesAPI.nuevoLength();
+this.$=instruccionesAPI.nuevoLength(_$[$0].first_column, _$[$0].first_line);
 break;
 case 139:
-this.$=instruccionesAPI.nuevoPush($$[$0-1]);
+this.$=instruccionesAPI.nuevoPush($$[$0-1], _$[$0-3].first_column, _$[$0-3].first_line);
 break;
 }
 },

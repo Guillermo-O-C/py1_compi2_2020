@@ -184,15 +184,15 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
     function procesarDeclaracion(instruccion, tablaDeSimbolos, ambito){
         let temp= instruccion;
         while(temp!="Epsilon"){
-            crearSimbolo(instruccion.variable_type, temp.id, {tipo:primitive_Data(temp.data_type), isArray:temp.isArray}, temp.expresion, ambito, tablaDeSimbolos, instruccion.fila, instruccion.columna);
+            crearSimbolo(instruccion.variable_type, temp.id, {tipo:primitive_Data(temp.data_type), isArray:temp.isArray}, temp.expresion, ambito, tablaDeSimbolos, temp.fila, temp.columna);
             temp=temp.next_declaration;
         }
     }
     function procesarAsigacion(instruccion, tablaDeSimbolos, ambito){
         let assignedValue = procesarExpresionNumerica(instruccion.expresion, tablaDeSimbolos, ambito);
-        let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito));
+        let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito), instruccion.fila, instruccion.columna);
         if(principalValue.var_type==TIPO_VARIABLE.CONST && instruccion.id.acc=="Epsilon"){
-            consola.value+='>ERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
+            consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n>ERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
             throw '>ERROR:  No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';   
         }
         let temp = instruccion.id.acc;
@@ -203,7 +203,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 let value = ExistingAttribute(principalValue.tipo, temp.atributo, tablaDeSimbolos);
                 //comprobar que el valor sea del mismo tipo del atributo o null
                 if(value == false){
-                    consola.value+='>ERROR: No existe el atributo '+temp.atributo+'\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No existe el atributo '+temp.atributo+'\n';  
                     throw '>ERROR: No existe el atributo '+temp.atributo+'\n';
                 }
                 for(let attribute of principalValue.valor){
@@ -222,12 +222,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 //comprobar que sea un array
                 if(!Array.isArray(principalValue.valor)){
                 // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de acceso a posición de array inexistente\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de acceso a posición de array inexistente\n';  
                     throw '>ERROR: Intento de acceso a posición de array inexistente\n';                    
                 }
                 let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito);
                 if(valor.tipo!="number"){
-                    consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
                     throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
                 }
                 if(valor.valor>=principalValue.valor.length ||valor.valor<0){
@@ -243,7 +243,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 principalValue = principalValue.valor[valor.valor];
                 side="both"
             }else {
-                consola.value+='>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';  
+                consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';  
                 throw '>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';
             }
             temp=temp.next_acc;
@@ -253,7 +253,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             principalValue.tipo=assignedValue.tipo;
         }else{
             if(principalValue.tipo!=assignedValue.tipo){
-                consola.value+='>ERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';  
+                consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';  
                 throw '>ERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';                
             }else{
                 principalValue.valor=assignedValue.valor;
@@ -305,13 +305,13 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         //Verificar que no exista en el mismo ámbito
         if(ambito=="Global"){
             if(tablaDeSimbolos.existe(id, ambito, "variable")){
-                consola.value+='>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
+                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
                 throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';
             } 
         }else{
             if(tablaDeSimbolos.existe(id, "Global", "variable")){
                 if(tablaDeSimbolos.existe(id, ambito, "variable")){
-                consola.value+='>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
+                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
                 throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior'; 
                 }
             }
@@ -319,20 +319,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         
         //Ver que el tipo de símbolo sea el correcto con el del valor o undefined
         if(var_type==TIPO_VARIABLE.CONST && valor == "undefined"){
-            consola.value+='>ERROR: La delcaracion de la constante '+id+' debe ser inicializada.\n';  
+            consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: La delcaracion de la constante '+id+' debe ser inicializada.\n';  
             throw '>ERROR:La delcaracion de  la constante '+id+' debe ser inicializada.\n';             
         }
         if(valor!="undefined"){
             valor=procesarExpresionNumerica(valor, tablaDeSimbolos, ambito);
             if(data_type.tipo=="infer"){
-                //asignar el tipo de valor a la variable
-                /*
-                -comprobar si es array
-                -comprobar si todos los elementos del array son del mismo tipo,  hay tipo ARRAY
-                    -método recursivo para todos los elementos del array multidimensional
-                -si es array se cuentan las dimensiones, si no es array se pone dimension 0
-                -para sasber las dimensiones del array basat con entrar recursivamente al valor de la primera casilla hasta que el elemento no sea tipo array puesto que todos los elementos son del mismo tipo y eso se verificó previamente
-                */
                 data_type=valor.tipo;
             }else{
                 //compara que está bien el tipo
@@ -341,6 +333,17 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         }
         if(data_type.tipo=="infer"){
             data_type="undefined";
+        }else{
+            if(valor=="undefined"){
+                data_type=procesarDataType(data_type);
+            }else if(data_type.split("[]")[0]=="undefined"){
+                //no hay problema, está definido pero es un array sin datos
+            }else if(valor.tipo.split("[]")[0]=="undefined"){
+                //no hay problema, está definido pero es un array sin datos
+            }else if(data_type!=valor.tipo){
+                consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + data_type+".\n";
+                throw 'ERROR: Incompatibilidad de tipos: ' + valor.tipo + ' no se puede convertir en ' + data_type;
+            }
         }
         //Crear simbolo
         tablaDeSimbolos.agregar(var_type, id, data_type, valor.valor, ambito, fila, columna);
@@ -541,13 +544,17 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                         typeID=type.id;
                         break;
                     }else{
-                        consola.value+='>ERROR: No existe ningún type que coincida con el objeto.\n';  
+                        consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No existe ningún type que coincida con el objeto.\n';  
                         throw '>ERROR: No existe ningún type que coincida con el objeto.\n';                       
                     } 
                 }
                 
             }
-        }        
+        } 
+        if(typeID==undefined){
+            consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No existe ningún type que coincida con el objeto.\n';  
+            throw '>ERROR: No existe ningún type que coincida con el objeto.\n';                       
+        }       
         return {tipo:typeID, valor:attb};
     }
     function ExistingAttribute(typeID, attributeID, tablaDeSimbolos){
@@ -560,7 +567,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         return false;
     }
     function procesarAccID(instruccion, tablaDeSimbolos, ambito){
-        let principalValue = tablaDeSimbolos.obtenerSimbolo(instruccion.id, SplitAmbitos(ambito));
+        let principalValue = tablaDeSimbolos.obtenerSimbolo(instruccion.id, SplitAmbitos(ambito), instruccion.fila, instruccion.columna);
         let temp = instruccion.acc;
         let side="right";
         /*
@@ -576,7 +583,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 let value = ExistingAttribute(principalValue.tipo, temp.atributo, tablaDeSimbolos);
                 //comprobar que el valor sea del mismo tipo del atributo o null
                 if(value == false){
-                    consola.value+='>ERROR: No existe el atributo '+temp.atributo+'\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No existe el atributo '+temp.atributo+'\n';  
                     throw '>ERROR: No existe el atributo '+temp.atributo+'\n';
                 }
                 //para cuando sean atributos nulos
@@ -594,12 +601,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 //comprobar que sea un array
                 if(!Array.isArray(principalValue.valor)){
                 // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de acceso a posición de array inexistente\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de acceso a posición de array inexistente\n';  
                     throw '>ERROR: Intento de acceso a posición de array inexistente\n';                    
                 }
                 let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito);
                 if(valor.tipo!="number"){
-                    consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
                     throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
                 }/*
                 if(valor.valor>=principalValue.valor.length ||valor.valor<0){
@@ -613,11 +620,11 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 side="right";
                 if(!Array.isArray(principalValue.valor)){
                     // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de Pop a un array inexistente.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de Pop a un array inexistente.\n';  
                     throw '>ERROR: Intento de Pop a un array inexistente.\n';                    
                 }
                 if(principalValue.length==0){
-                    consola.value+='>ERROR: Intento de Pop a un array vacío.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de Pop a un array vacío.\n';  
                     throw '>ERROR: Intento de Pop a un array vacío.\n'; 
                 }
                 principalValue=principalValue.valor.pop();
@@ -626,7 +633,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 side="right";
                 if(!Array.isArray(principalValue.valor)){
                     // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de Length a un array inexistente.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de Length a un array inexistente.\n';  
                     throw '>ERROR: Intento de Length a un array inexistente.\n';                    
                 }
                 principalValue={valor:principalValue.valor.length, tipo:"number"};
@@ -634,7 +641,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             }else if(temp.sentencia==SENTENCIAS.PUSH){//N
                 if(!Array.isArray(principalValue.valor)){
                     // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de Push a un array inexistente.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de Push a un array inexistente.\n';  
                     throw '>ERROR: Intento de Push a un array inexistente.\n';                    
                 }
                 let valor = procesarExpresionNumerica(temp.valor, tablaDeSimbolos, ambito);
@@ -648,30 +655,30 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         return {valor: principalValue.valor, side:side, tipo:principalValue.tipo};   
     }
     function SplitAmbitos(name){
-        let er=[];
         let ar = name.split("_");
-        for(let i =1;i<=ar.length;i++){
-            let x="";
-            for(let e =1;e<=i;e++){
-                if(e==1){
-                    x=ar[ar.length-e]
-                }else{          
-                    x=ar[ar.length-e]+"_"+x;
-                }              
-            }
-            er.push(x);
+        let er =[];
+        for(let i =ar.length-1;i>=0;i--){
+          let x="";
+          for(let e =0;e<=i;e++){
+            if(e==0){
+              x+=ar[e];
+            }else{
+              x+="_"+ar[e];
+            }    
+          }
+          er.push(x);
         }
-            er.push("Global")
+        er.push("Global");
         return er;
     }
     function procesarLlamada(instruccion, tablaDeSimbolos, ambito){
         let funcion = tablaDeSimbolos.obtenerFuncion(instruccion.id);
         if(ambito==GetAmbito(instruccion.id) || instruccion.id.split("_").length==1){
             if (funcion.parametros.length != 0 && instruccion.parametros == "Epsilon") {
-                consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
+                consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
                 throw 'ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
             } else if (funcion.parametros.length == 0 && instruccion.parametros != "Epsilon") {
-                consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
+                consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
                 throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
             }else{
                 let argumentos = getArguments(instruccion.parametros, tablaDeSimbolos, ambito);
@@ -684,11 +691,16 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                         //para que acepte los nulls    
                         tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, funcion.parametros[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                     }else{
-                        consola.value+='ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
+                        consola.value+='ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                         throw 'ERROR:La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
                     }
                 }               
-                let returnedAcction = procesarBloque(funcion.accion, tsFuncion, instruccion.id);
+                let returnedAcction;
+                if(instruccion.id.split("_").length>1){
+                    returnedAcction = procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
+                }else{
+                    returnedAcction = procesarBloque(funcion.accion, tsFuncion, instruccion.id);
+                }
                 if(returnedAcction!=undefined){
                     /*if(returnedAcction.sentencia===SENTENCIAS.BREAK){
                         consola.value+='>ERROR: Break fuera de un ciclo.';  
@@ -698,7 +710,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                         if(returnedAcction.valor=="undefined" && funcion.tipo=="void"){
                             //todo bien
                         }else if(returnedAcction.valor.tipo!=funcion.tipo){
-                            consola.value+='>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.';  
+                            consola.value+='>ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.';  
                             throw '>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.'; 
                         } 
                         return returnedAcction.valor; 
@@ -707,7 +719,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 //declarar parámetros con los valores de los argumentos
             }
         }else{
-            consola.value+='>ERROR: No se puede ejecutar '+instruccion.id+' desde el ámbito '+ambito+'.\n';  
+            consola.value+='>ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n No se puede ejecutar '+instruccion.id+' desde el ámbito '+ambito+'.\n';  
             throw '>ERROR: No se puede ejecutar '+instruccion.id+' desde el ámbito '+ambito+'.\n'; 
         }        
     }
@@ -735,9 +747,9 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         return argumentos;
     }
     function procesarUnicambios(instruccion, tablaDeSimbolos, ambito){
-        let principalValue=getPrincipalValue(instruccion, tablaDeSimbolos, ambito)
+        let principalValue=getPrincipalValue(instruccion, tablaDeSimbolos, ambito);
         if(principalValue.tipo!="number"){
-            consola.value+='>ERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';  
+            consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';  
             throw '>ERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';    
         }else if(instruccion.sentencia==SENTENCIAS.INCREMENTO){
             principalValue.valor++;
@@ -748,7 +760,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
                 principalValue.valor+=valor.valor;
             }else{
-                consola.value+='>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
                 throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
             }
         }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_RESTA){
@@ -756,15 +768,15 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
                 principalValue.valor+=valor.valor;
             }else{
-                consola.value+='>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
                 throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
             }        
         }
     }
     function getPrincipalValue(instruccion, tablaDeSimbolos,ambito){
-        let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito));
+        let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito), instruccion.fila, instruccion.columna);
         if(principalValue.var_type==TIPO_VARIABLE.CONST && instruccion.id.acc=="Epsilon"){
-            consola.value+='>ERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
+            consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';  
             throw '>ERROR:  No se puede asignar a ' + instruccion.id.id+' porque es una constante.\n';   
         }
         let temp = instruccion.id.acc;
@@ -775,7 +787,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 let value = ExistingAttribute(principalValue.tipo, temp.atributo, tablaDeSimbolos);
                 //comprobar que el valor sea del mismo tipo del atributo o null
                 if(value == false){
-                    consola.value+='>ERROR: No existe el atributo '+temp.atributo+'\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No existe el atributo '+temp.atributo+'\n';  
                     throw '>ERROR: No existe el atributo '+temp.atributo+'\n';
                 }
                 for(let attribute of principalValue.valor){
@@ -788,12 +800,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 //comprobar que sea un array
                 if(!Array.isArray(principalValue.valor)){
                 // if(principalValue.tipo!=TIPO_DATO.ARRAY){
-                    consola.value+='>ERROR: Intento de acceso a posición de array inexistente\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Intento de acceso a posición de array inexistente\n';  
                     throw '>ERROR: Intento de acceso a posición de array inexistente\n';                    
                 }
                 let valor = procesarExpresionNumerica(temp.index, tablaDeSimbolos, ambito);
                 if(valor.tipo!="number"){
-                    consola.value+='>ERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
+                    consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No se reconoce la expresion '+valor.valor+' como un index.\n';  
                     throw '>ERROR:No se reconoce la expresion '+valor.valor+' como un index.\n';                      
                 }/*
                 if(valor.valor>=principalValue.valor.length ||valor.valor<0){
@@ -804,7 +816,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 principalValue = principalValue.valor[valor.valor];
                 side="both"
             }else {
-                consola.value+='>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';  
+                consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';  
                 throw '>ERROR: No se puede asignar esta accion en esta asignación: '+temp+'\n';
             }
             temp=temp.next_acc;

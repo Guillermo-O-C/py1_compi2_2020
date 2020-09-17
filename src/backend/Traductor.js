@@ -440,7 +440,8 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 if(instruccion.sentencia==SENTENCIAS.FUNCION){
                     //quizás con ponerlo acá se soluciona
                     funciones.push(instruccion);
-                    output+=(ambito!="Global")?"//origen de la función "+instruccion.id+"\n":"";
+                    //output+=(ambito!="Global")?"//origen de la función "+instruccion.id+"\n":"";
+                    output+="//origen de la función "+instruccion.id+"\n";
                 }else{
                         procesarBloque([instruccion], tablaDeSimbolos, instrucciones.id);                    
                 }

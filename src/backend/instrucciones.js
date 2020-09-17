@@ -198,20 +198,20 @@ class TS {
         else {this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
 
-    obtenerSimbolo(id, ambito) {
+    obtenerSimbolo(id, ambito, fila, columna) {
         for(let amb of ambito){
             const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && amb==simbolo.ambito && simbolo.si =="variable")[0];
             if (simbolo){
                 return { valor: simbolo.valor, tipo: simbolo.tipo }
             };
         }
-        this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.';
+        this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito[0]+'\nERROR: variable: ' + id + ' no ha sido declarada.';
         throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
-    getSimbol(id, ambito) {
+    getSimbol(id, ambito, fila, columna) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si=="variable")[0];
         if (simbolo) return simbolo;
-        else{ this._consola.value+='ERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
+        else{ this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
     obtenerFuncion(id, ambito) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="funcion")[0];
@@ -310,10 +310,12 @@ const instruccionesAPI = {
         columna:columna
       };  
     },
-    nuevoObjeto:function(atributos){
+    nuevoObjeto:function(atributos, columna, fila){
         return{
             tipo:TIPO_VALOR.OBJETO,
-            atributos:atributos
+            atributos:atributos,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoObjAtributo:function(id, valor, next){
@@ -342,10 +344,12 @@ const instruccionesAPI = {
           isArray:isArray
       };  
     },
-    nuevoArray: function(dimension){
+    nuevoArray: function(dimension, columna, fila){
         return{
             data_type:TIPO_DATO.ARRAY,
-            dimension:dimension
+            dimension:dimension,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoDato: function (dato, next_data) {
@@ -372,11 +376,13 @@ const instruccionesAPI = {
             result2:result2
         };
     },
-    nuevaAsignacion: function(id, valor) {
+    nuevaAsignacion: function(id, valor, columna, fila) {
         return {
             sentencia: SENTENCIAS.ASIGNACION,
             id: id,
-            expresion: valor
+            expresion: valor,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoImprimir: function(valor) {
@@ -484,17 +490,21 @@ const instruccionesAPI = {
             siguiente: siguiente
         };
     },
-    nuevaLlamada: function(id, parametros) {
+    nuevaLlamada: function(id, parametros, columna, fila) {
         return {
             sentencia: SENTENCIAS.LLAMADA,
             id: id,
-            parametros: parametros
+            parametros: parametros,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoArgumento: function(expresion, siguiente) {
+    nuevoArgumento: function(expresion, siguiente, columna, fila) {
         return {
             expresion: expresion,
-            siguiente: siguiente
+            siguiente: siguiente,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoParametro: function(tipo, id, siguiente, opcional) {
@@ -525,52 +535,68 @@ const instruccionesAPI = {
             next_index:next_index
         };
     },
-    nuevoDecremento: function(id){
+    nuevoDecremento: function(id, columna, fila){
         return{
             sentencia:SENTENCIAS.DECREMENTO,
-            id:id
+            id:id,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoIncremento: function(id){
+    nuevoIncremento: function(id, columna, fila){
         return{
             sentencia:SENTENCIAS.INCREMENTO,
-            id:id
+            id:id,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoPush: function(valor){
+    nuevoPush: function(valor, columna, fila){
         return{
             sentencia:SENTENCIAS.PUSH,
-            valor:valor
+            valor:valor,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoPop: function(){
+    nuevoPop: function(columna, fila){
         return{            
-            sentencia:SENTENCIAS.POP
+            sentencia:SENTENCIAS.POP,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoLength: function(){
+    nuevoLength: function(columna, fila){
         return{            
-            sentencia:SENTENCIAS.LENGTH
+            sentencia:SENTENCIAS.LENGTH,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevaReferencia:function(id, acc){
+    nuevaReferencia:function(id, acc, columna, fila){
         return{
             id:id,
-            acc:acc
+            acc:acc,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoAccPosicion:function(index, next_acc){
+    nuevoAccPosicion:function(index, next_acc, columna, fila){
         return{
             acc_type:TIPO_ACCESO.POSICION,
             index:index,
-            next_acc:next_acc
+            next_acc:next_acc,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoAccAtributo:function(atributo, next_acc){
+    nuevoAccAtributo:function(atributo, next_acc, columna, fila){
         return{
             acc_type:_TIPO_ACCESO.ATRIBUTO,
             atributo:atributo,
-            next_acc:next_acc
+            next_acc:next_acc,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoContinue:function(){
@@ -583,10 +609,12 @@ const instruccionesAPI = {
             sentencia:SENTENCIAS.BREAK
         };
     },
-    nuevoAcceso: function(id){
+    nuevoAcceso: function(id, columna, fila){
         return{
             sentencia:SENTENCIAS.ACCESO,
-            id:id
+            id:id,
+            columna:columna,
+            fila:fila
         };
     },
     nuevoGraficarTS:function(){
@@ -594,18 +622,22 @@ const instruccionesAPI = {
             sentencia:SENTENCIAS.GRAFICAR_TS
         };
     },
-    nuevoAsignacioSuma:function(id, valor){
+    nuevoAsignacioSuma:function(id, valor, columna, fila){
         return{
             sentencia:SENTENCIAS.ASIGNACION_SUMA,
             id:id,
-            valor:valor
+            valor:valor,
+            columna:columna,
+            fila:fila
         };
     },
-    nuevoAsignacioResta:function(id, valor){
+    nuevoAsignacioResta:function(id, valor, columna, fila){
         return{
             sentencia:SENTENCIAS.ASIGNACION_RESTA,
             id:id,
-            valor:valor
+            valor:valor,
+            columna:columna,
+            fila:fila
         };
     },
 

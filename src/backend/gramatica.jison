@@ -141,13 +141,13 @@ instruccion
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
 	| R_FUNCTION IDENTIFICADOR ABRIR_PARENTESIS parametros CERRAR_PARENTESIS DOS_PUNTOS tipo ABRIR_LLAVE instrucciones CERRAR_LLAVE {  $$ = instruccionesAPI.nuevaFuncion($7, $2, $4, $9, @2.first_line, @2.first_column); }
-	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
+	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3, @1.first_column, @1.first_line);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);}
-	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1);}
-	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1);}
-	| id ASIGNACION_SUMA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioSuma($1, $3);}
-	| id ASIGNACION_RESTA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioResta($1, $3);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3, @1.first_column, @1.first_line);}
+	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, @1.first_column, @1.first_line);}
+	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, @1.first_column, @1.first_line);}
+	| id ASIGNACION_SUMA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioSuma($1, $3, @1.first_column, @1.first_line);}
+	| id ASIGNACION_RESTA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioResta($1, $3, @1.first_column, @1.first_line);}
 	| id PUNTO_COMA {$$=instruccionesAPI.nuevoAcceso($1);}
 	| R_BREAK PUNTO_COMA{$$=instruccionesAPI.nuevoBreak();}
 	| R_CONTINUE PUNTO_COMA {$$=instruccionesAPI.nuevoContinue();}
@@ -168,14 +168,14 @@ sentencia
 	| R_FOR ABRIR_PARENTESIS R_LET IDENTIFICADOR R_IN id CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoForIn($4, $6, $9);}
 	| R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS ABRIR_LLAVE sentencias CERRAR_LLAVE {$$=instruccionesAPI.nuevoWhile($3, $6);}
 	| R_DO ABRIR_LLAVE sentencias CERRAR_LLAVE R_WHILE ABRIR_PARENTESIS expresion CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoDoWhile($3, $7);}
-	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3);}
+	| IDENTIFICADOR ABRIR_PARENTESIS argumentos CERRAR_PARENTESIS PUNTO_COMA {$$ = instruccionesAPI.nuevaLlamada($1, $3, @1.first_column, @1.first_line);}
 	| R_RETURN retorno PUNTO_COMA{$$=instruccionesAPI.nuevoReturn($2);}
-	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);}
-	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2);}
-	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2);}
-	| id ASIGNACION_SUMA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioSuma($1, $3);}
-	| id ASIGNACION_RESTA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioResta($1, $3);}
-	| id PUNTO_COMA {$$=instruccionesAPI.nuevoAcceso($1);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3, @1.first_column, @1.first_line);}
+	| id INCREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoIncremento($1, $2, @1.first_column, @1.first_line);}
+	| id DECREMENTO PUNTO_COMA{$$=instruccionesAPI.nuevoDecremento($1, $2, @1.first_column, @1.first_line);}
+	| id ASIGNACION_SUMA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioSuma($1, $3, @1.first_column, @1.first_line);}
+	| id ASIGNACION_RESTA expresion PUNTO_COMA {$$=instruccionesAPI.nuevoAsignacioResta($1, $3, @1.first_column, @1.first_line);}
+	| id PUNTO_COMA {$$=instruccionesAPI.nuevoAcceso($1, @1.first_column, @1.first_line);}
 	| R_BREAK PUNTO_COMA{$$=instruccionesAPI.nuevoBreak();}
 	| R_CONTINUE PUNTO_COMA {$$=instruccionesAPI.nuevoContinue();}
 	| R_GRAFICAR_TS ABRIR_PARENTESIS CERRAR_PARENTESIS PUNTO_COMA {$$=instruccionesAPI.nuevoGraficarTS();}
@@ -207,8 +207,8 @@ expresion
 	| CADENA											{ $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA); }
 	| CADENA_CHARS { $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA_CHARS); }
 	| CADENA_EJECUTABLE { $$ = instruccionesAPI.nuevoValor($1, TIPO_VALOR.CADENA_EJECUTABLE); }
-	| objeto { $$ = instruccionesAPI.nuevoObjeto($1); }
-	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2); }
+	| objeto { $$ = instruccionesAPI.nuevoObjeto($1, @1.first_column, @1.first_line); }
+	| ABRIR_CORCHETE arrays CERRAR_CORCHETE  { $$ = instruccionesAPI.nuevoArray($2, @2.first_column, @2.first_line); }
 	| id {$$=instruccionesAPI.nuevoValor($1, TIPO_VALOR.IDENTIFICADOR);}
 	//	| id PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop();}
 	//	| id PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength();}
@@ -219,11 +219,11 @@ expresion
 	//| IDENTIFICADOR array_position PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength($1, $2);}
 ;
 argumentos
-	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2);}
+	: expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($1, $2, @1.first_column, @1.first_line);}
 	| {$$ = "Epsilon";}
 ;
 argumentos_P
-	: COMA expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($2, $3);}
+	: COMA expresion argumentos_P {$$ = instruccionesAPI.nuevoArgumento($2, $3 , @2.first_column, @2.first_line);}
 	| {$$ =  "Epsilon";}
 ;
 /* Definición de la gramática de Typescript*/
@@ -337,13 +337,13 @@ array_position
 	| {$$="false";}
 ;
 id
-	: IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevaReferencia($1, $2);}
+	: IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevaReferencia($1, $2, @1.first_column, @1.first_line);}
 ;
 id_pr
-	: ABRIR_CORCHETE expresion CERRAR_CORCHETE id_pr {$$=instruccionesAPI.nuevoAccPosicion($2, $4);}
-	| PUNTO IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevoAccAtributo($2, $3);}
-	| PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop();}
-	| PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength();}
-	| PUNTO R_PUSH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPush($4);}
+	: ABRIR_CORCHETE expresion CERRAR_CORCHETE id_pr {$$=instruccionesAPI.nuevoAccPosicion($2, $4, @1.first_column, @1.first_line);}
+	| PUNTO IDENTIFICADOR id_pr {$$=instruccionesAPI.nuevoAccAtributo($2, $3, @2.first_column, @2.first_line);}
+	| PUNTO R_POP ABRIR_PARENTESIS CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPop(@2.first_column, @2.first_line);}
+	| PUNTO R_LENGTH {$$=instruccionesAPI.nuevoLength(@2.first_column, @2.first_line);}
+	| PUNTO R_PUSH ABRIR_PARENTESIS expresion CERRAR_PARENTESIS {$$=instruccionesAPI.nuevoPush($4, @2.first_column, @2.first_line);}
 	| {$$="Epsilon";}
 ;
