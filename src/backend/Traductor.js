@@ -5,7 +5,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
    let output="";
    try {
         consola.value="";
-        const tsGlobal = new TS([]);
+        const tsGlobal = new TS([], consola);
         scanForFunctions(salida.AST, tsGlobal, "Global");
         scanForTypes(salida.AST, tsGlobal);
         procesarBloque(salida.AST, tsGlobal, "Global");
@@ -35,34 +35,34 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarTypeDeclaration(instruccion, tablaDeSimbolos, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.IF){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarIf(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.IMPRIMIR){
                 procesarImpresion(instruccion, tablaDeSimbolos);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.SWITCH){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarSwitch(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.FOR){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarFor(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.FOR_IN){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarForIn(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.FOR_OF){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procecsarForOf(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.WHILE){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarWhile(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.DO_WHILE){
-                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice());
+                const tsTemporal = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 procesarDoWhile(instruccion, tsTemporal, ambito);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.LLAMADA){
@@ -219,7 +219,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             return procesarObjeto(expresion, tablaDeSimbolos);
         }else if (expresion.data_type === TIPO_DATO.ARRAY) {
             return procesarArreglo(expresion, tablaDeSimbolos);
-        }else if (expresion.data_type === TIPO_DATO.OPERADOR_TERNARIO) {
+        }else if (expresion.tipo === TIPO_DATO.OPERADOR_TERNARIO) {
             return procesarOperadorTernario(expresion, tablaDeSimbolos);
         }else if (expresion.sentencia === SENTENCIAS.ACCESO_POSICION) {
             return procesarAccesoAPosicion(expresion, tablaDeSimbolos);
@@ -255,10 +255,13 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         let text="{\n";
         let temp = objeto.atributos;
         while(temp!="Epsilon"){
-            text+=temp.id+":"+procesarExpresionNumerica(temp.valor, tablaDeSimbolos)+"\n";
+            if(temp != objeto.atributos){
+                text+=",\n";
+            }
+            text+=temp.id+":"+procesarExpresionNumerica(temp.valor, tablaDeSimbolos);
             temp=temp.next;
         }
-        return text+"}";
+        return text+"\n}";
     }
     function procesarArreglo(arreglo, tablaDeSimbolos){
          let text="";
@@ -453,7 +456,11 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         for(let instruccion of instrucciones){
             if(instruccion.sentencia==SENTENCIAS.FUNCION){
                 tablaDeSimbolos.agregarFuncion(instruccion.id, instruccion.tipo, null, null, ambito, instruccion.fila, instruccion.columna);
-                if(ambito!="Global")tablaDeSimbolos.updateFuncionID(instruccion.id, ambito+"_"+instruccion.id);
+                if(ambito!="Global"){
+                    tablaDeSimbolos.updateFuncionID(instruccion.id, ambito+"_"+instruccion.id);
+                }else{
+                    tablaDeSimbolos.updateFuncionID(instruccion.id, instruccion.id);                    
+                }
                 instruccion.id=(ambito=="Global")?instruccion.id:ambito+"_"+instruccion.id;
                 scanForFunctions(instruccion.accion, tablaDeSimbolos, instruccion.id);
             }

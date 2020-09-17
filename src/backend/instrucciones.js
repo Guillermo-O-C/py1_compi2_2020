@@ -235,7 +235,7 @@ class TS {
         else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
     changeOldIDCall(id){
-        const funcion = this._simbolos.filter(simbolo => simbolo.oldID === id)[0];
+        const funcion = this._simbolos.filter(simbolo => simbolo.oldID === id && simbolo.si=="funcion")[0];
         if (funcion) {
             return funcion.id;
         }
@@ -366,7 +366,7 @@ const instruccionesAPI = {
     },
     nuevoOperadorTernario:function(logica, result1, result2){
         return{
-            data_type:TIPO_DATO.OPERADOR_TERNARIO,
+            tipo:TIPO_DATO.OPERADOR_TERNARIO,
             logica:logica,
             result1:result1,
             result2:result2

@@ -1,6 +1,7 @@
+import { parser } from "./expresiones";
 import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR, TIPO_ACCESO } from "./instrucciones";
 
-export default function Ejecutar(salida, consola, traduccion, printedTable){
+export default function Ejecutar(salida, consola, traduccion, printedTable, tablero){
    // console.log("this is the output"+  JSON.stringify(salida.AST)); 
    let output="";
    const tsGlobal = new TS([], consola);
@@ -87,7 +88,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 procesarUnicambios(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.SWITCH){ 
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola);               
-                procesarSwitch(instruccion, tsFor, ambito);
+                let returnedAcction =  procesarSwitch(instruccion, tsFor, ambito);
+                if(returnedAcction!=undefined){
+                    return returnedAcction;
+                }
             }else if(instruccion.sentencia===SENTENCIAS.BREAK){
                 return {sentencia:SENTENCIAS.BREAK};
             }else if(instruccion.sentencia===SENTENCIAS.CONTINUE){
@@ -98,6 +102,9 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
                 }else{
                     return {sentencia:SENTENCIAS.RETURN, valor:procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito)};
                 }
+            }else if(instruccion.sentencia===SENTENCIAS.GRAFICAR_TS){
+                const tsFor = new TS(JSON.parse(JSON.stringify(tablaDeSimbolos.simbolos)), consola);  
+                graficar_Ts(tsFor, ambito);
             }
         }
     }
@@ -351,6 +358,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             const valorDer = procesarExpresionNumerica(expresion.operandoDer, tablaDeSimbolos, ambito);
             if(valorIzq.tipo=="string"){
                 return { valor: valorIzq.valor + toString(valorDer, tablaDeSimbolos, ambito), tipo: "string" };
+            }else if(valorDer.tipo=="string"){
+                return { valor: valorDer.valor + toString(valorIzq, tablaDeSimbolos, ambito), tipo: "string" };
             }else{
                 return { valor: valorIzq.valor + valorDer.valor, tipo: "number" };
             }
@@ -435,7 +444,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         } else if (expresion.tipo === TIPO_VALOR.CADENA_CHARS) {
             return { valor: expresion.valor, tipo: "string" };
         } else if (expresion.tipo === TIPO_VALOR.CADENA_EJECUTABLE) {
-            return { valor: expresion.valor, tipo: "string" };
+            return { valor: procesarCadenaEjecutable(expresion.valor, tablaDeSimbolos, ambito), tipo: "string" };
+        } else if(expresion.tipo===TIPO_DATO.OPERADOR_TERNARIO){
+            let logica =  procesarExpresionNumerica(expresion.logica, tablaDeSimbolos, ambito);
+            return logica.valor? procesarExpresionNumerica(expresion.result1, tablaDeSimbolos, ambito):procesarExpresionNumerica(expresion.result2, tablaDeSimbolos, ambito);
         } else {
             throw 'ERROR: expresión numérica no válida: ' + expresion.valor;
         }
@@ -799,6 +811,15 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
         }
         return principalValue;
     }
+    function procesarCadenaEjecutable(cadena, tablaDeSimbolos, ambito){
+        let text=String(cadena).match(/\$\{[^\}]*\}/);;
+        while(text!=null){
+            let tempAST = parser.parse(text[0].substring(2, text[0].length-1));
+            cadena=String(cadena).replace(text[0], procesarExpresionNumerica(tempAST.AST, tablaDeSimbolos, ambito).valor);
+            text =String(cadena).match(/\$\{[^\}]*\}/);
+        }
+        return cadena;
+    }
     //SENTENCIAS DE CONTROL 
     function procesarIf(instruccion, tablaDeSimbolos, ambito) {
         const logica = procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito);
@@ -993,5 +1014,64 @@ export default function Ejecutar(salida, consola, traduccion, printedTable){
             }
         }
         return arreglo;
+    }
+    //Graficar TS
+    function graficar_Ts(tablaDeSimbolos, ambito){
+        let tabla = document.createElement("table");
+        tabla.bgColor= '#bbe1fa';
+        tabla.align="center";
+        tabla.width="80%";
+        tabla.border="1px solid black";
+        var row0 =  tabla.insertRow( tabla.rows.length);
+        var celda01 = row0.insertCell(0);
+        var celda02 = row0.insertCell(1);
+        var celda03 = row0.insertCell(2);
+        var celda04 = row0.insertCell(3);
+        var celda05 = row0.insertCell(4);
+        var celda06 = row0.insertCell(5);
+        var celda07 = row0.insertCell(6);
+        var celda08 = row0.insertCell(7);
+        celda01.innerHTML = "No.";
+        celda01.bgColor="#40a8c4";
+        celda02.innerHTML = "Sentencia";
+        celda02.bgColor="#40a8c4";
+        celda03.innerHTML = "ID";
+        celda03.bgColor="#40a8c4";
+        celda04.innerHTML = "Tipo";
+        celda04.bgColor="#40a8c4";
+        celda05.innerHTML = "Valor";
+        celda05.bgColor="#40a8c4";
+        celda06.innerHTML = "Fila";
+        celda06.bgColor="#40a8c4";
+        celda07.innerHTML = "Columna";
+        celda07.bgColor="#40a8c4";
+        celda08.innerHTML = "Ambito";
+        celda08.bgColor="#40a8c4";
+      if(tablaDeSimbolos._simbolos.length!=0){
+        let i=0;
+        for(let simbolo of tablaDeSimbolos._simbolos) {
+        if(simbolo.si=="variable"){
+        i++;
+          var row = tabla.insertRow( tabla.rows.length);
+          var celda1 = row.insertCell(0);
+          var celda2 = row.insertCell(1);
+          var celda3 = row.insertCell(2);
+          var celda4 = row.insertCell(3);
+          var celda5 = row.insertCell(4);
+          var celda6 = row.insertCell(5);
+          var celda7 = row.insertCell(6);
+          var celda8 = row.insertCell(7);
+          celda1.innerHTML = i;
+          celda2.innerHTML = simbolo.si;
+          celda3.innerHTML = simbolo.id;
+          celda4.innerHTML = simbolo.tipo;
+          celda5.innerHTML = toString({valor:simbolo.valor,tipo:simbolo.tipo}, tablaDeSimbolos, ambito);
+          celda6.innerHTML = simbolo.fila;
+          celda7.innerHTML = simbolo.columna;
+          celda8.innerHTML = simbolo.ambito;
+        }
+        }
+      }
+      tablero.appendChild(tabla);
     }
 }

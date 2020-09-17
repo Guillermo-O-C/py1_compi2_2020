@@ -84,6 +84,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 const reports = {tsTr:[], erTr:[], tsEj:[], erEj:[]};
 const intros = {AST:[], entrada:"", salida:""};
+const tablero = document.createElement("div");
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -106,7 +107,8 @@ export default function UI() {
     Traducir(analizar(intros.entrada), document.getElementById('consola'), intros.salida, reports);
   }
   function Interpretar(){
-    Ejecutar(analizar(intros.entrada), document.getElementById('consola'), intros.salida, reports);
+    tablero.innerHTML=document.createElement("div").innerHTML;
+    Ejecutar(analizar(intros.entrada), document.getElementById('consola'), intros.salida, reports,  tablero);
    }
   function translationConsole(editor){
     intros.salida=editor;
@@ -122,17 +124,21 @@ export default function UI() {
       var celda01 = row0.insertCell(0);
       var celda02 = row0.insertCell(1);
       var celda03 = row0.insertCell(2);
-      var celda04 = row0.insertCell(3);
-      var celda05 = row0.insertCell(4);
-      var celda06 = row0.insertCell(5);
-      var celda07 = row0.insertCell(6);
+      var celda05 = row0.insertCell(3);
+      var celda06 = row0.insertCell(4);
+      var celda07 = row0.insertCell(5);
       celda01.innerHTML = "No.";
+      celda01.bgColor="#40a8c4";
       celda02.innerHTML = "Sentencia";
+      celda02.bgColor="#40a8c4";
       celda03.innerHTML = "ID";
-      celda04.innerHTML = "Tipo";
+      celda03.bgColor="#40a8c4";
       celda05.innerHTML = "Fila";
+      celda05.bgColor="#40a8c4";
       celda06.innerHTML = "Columna";
+      celda06.bgColor="#40a8c4";
       celda07.innerHTML = "Ambito";
+      celda07.bgColor="#40a8c4";
     if(tablaDeSimbolos.length!=0){
       let i=1;
       for(let simbolo of tablaDeSimbolos._simbolos) {
@@ -142,14 +148,12 @@ export default function UI() {
         var celda1 = row.insertCell(0);
         var celda2 = row.insertCell(1);
         var celda3 = row.insertCell(2);
-        var celda4 = row.insertCell(3);
-        var celda5 = row.insertCell(4);
-        var celda6 = row.insertCell(5);
-        var celda7 = row.insertCell(6);
+        var celda5 = row.insertCell(3);
+        var celda6 = row.insertCell(4);
+        var celda7 = row.insertCell(5);
         celda1.innerHTML = i;
         celda2.innerHTML = simbolo.si;
         celda3.innerHTML = simbolo.id;
-        celda4.innerHTML = simbolo.tipo.tipo;
         celda5.innerHTML = simbolo.fila;
         celda6.innerHTML = simbolo.columna;
         celda7.innerHTML = simbolo.ambito;
@@ -159,9 +163,8 @@ export default function UI() {
         var celda2 = row.insertCell(1);
         var celda3 = row.insertCell(2);
         var celda4 = row.insertCell(3);
-        var celda5 = row.insertCell(4);
-        var celda6 = row.insertCell(5);
-        var celda7 = row.insertCell(6);
+        var celda6 = row.insertCell(4);
+        var celda7 = row.insertCell(5);
         celda1.innerHTML = i;
         celda2.innerHTML = simbolo.si;
         celda3.innerHTML = simbolo.id;
@@ -204,68 +207,72 @@ export default function UI() {
     }
   }  
   function populateTableTsEj(tablaDeSimbolos){
-    var row0 =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+    let tabla = document.createElement("table");
+    tabla.bgColor= '#bbe1fa';
+    tabla.align="center";
+    tabla.width="80%";
+    tabla.border="1px solid black";
+    {/*"width'80%' style= border='1' align='center'";*/}
+    var row0 =  tabla.insertRow( tabla.rows.length);
     var celda01 = row0.insertCell(0);
     var celda02 = row0.insertCell(1);
     var celda03 = row0.insertCell(2);
     var celda04 = row0.insertCell(3);
-    var celda05 = row0.insertCell(4);
-    var celda06 = row0.insertCell(5);
-    var celda07 = row0.insertCell(6);
-    var celda08 = row0.insertCell(7);
+    var celda06 = row0.insertCell(4);
+    var celda07 = row0.insertCell(5);
+    var celda08 = row0.insertCell(6);
     celda01.innerHTML = "No.";
+    celda01.bgColor="#40a8c4";
     celda02.innerHTML = "Sentencia";
+    celda02.bgColor="#40a8c4";
     celda03.innerHTML = "ID";
+    celda03.bgColor="#40a8c4";
     celda04.innerHTML = "Tipo";
-    celda05.innerHTML = "Valor";
+    celda04.bgColor="#40a8c4";
     celda06.innerHTML = "Fila";
+    celda06.bgColor="#40a8c4";
     celda07.innerHTML = "Columna";
+    celda07.bgColor="#40a8c4";
     celda08.innerHTML = "Ambito";
+    celda08.bgColor="#40a8c4";
   if(tablaDeSimbolos.length!=0){
-    let i=1;
+    let i=0;
     for(let simbolo of tablaDeSimbolos._simbolos) {
     i++;
     if(simbolo.si=="variable"){
-      var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var row = tabla.insertRow( tabla.rows.length);
       var celda1 = row.insertCell(0);
       var celda2 = row.insertCell(1);
       var celda3 = row.insertCell(2);
       var celda4 = row.insertCell(3);
-      var celda5 = row.insertCell(4);
-      var celda6 = row.insertCell(5);
-      var celda7 = row.insertCell(6);
-      var celda8 = row.insertCell(7);
+      var celda6 = row.insertCell(4);
+      var celda7 = row.insertCell(5);
+      var celda8 = row.insertCell(6);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
       celda4.innerHTML = simbolo.tipo;
-      if(simbolo.valor.tipo==TIPO_DATO.ARRAY){
-        celda5.innerHTML = JSON.stringify(simbolo.valor.valor);
-      }else{
-        celda5.innerHTML = simbolo.valor.valor;
-      }     
       celda6.innerHTML = simbolo.fila;
       celda7.innerHTML = simbolo.columna;
       celda8.innerHTML = simbolo.ambito;
     }else if(simbolo.si=="funcion"){
-      var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var row =  tabla.insertRow( tabla.rows.length);
       var celda1 = row.insertCell(0);
       var celda2 = row.insertCell(1);
       var celda3 = row.insertCell(2);
       var celda4 = row.insertCell(3);
-      var celda5 = row.insertCell(4);
-      var celda6 = row.insertCell(5);
-      var celda7 = row.insertCell(6);
-      var celda8 = row.insertCell(7);
+      var celda6 = row.insertCell(4);
+      var celda7 = row.insertCell(5);
+      var celda8 = row.insertCell(6);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
-      celda4.innerHTML = simbolo.tipo.tipo;
+      celda4.innerHTML = simbolo.tipo;
       celda6.innerHTML = simbolo.fila;
       celda7.innerHTML = simbolo.columna;
       celda8.innerHTML = simbolo.ambito;
     }else{
-      var row =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var row =  tabla.insertRow( tabla.rows.length);
       var celda1 = row.insertCell(0);
       var celda2 = row.insertCell(1);
       var celda3 = row.insertCell(2);
@@ -281,6 +288,7 @@ export default function UI() {
     }
     }
   }
+  return tabla;
 }
   function populateTableErEj(Errores_Array){    
     if(Errores_Array.length!=0){
@@ -334,7 +342,8 @@ export default function UI() {
    async function handleClickOpenTsEj (){
     setOpen(true);
     await setTimeout(null, 300);
-    populateTableTsEj(reports.tsEj);
+    document.getElementById('tablero').innerHTML=tablero.innerHTML;
+    document.getElementById('tablero').appendChild(populateTableTsEj(reports.tsEj));
    };
    async function handleClickOpenErEj (){
     setOpen(true);
@@ -478,6 +487,7 @@ export default function UI() {
           </Toolbar>
         </AppBar>
         <div id="AST_FRAME"></div>
+        <div id="tablero"></div>
        <table id="tablaDeSalida" width="80%" style={{background:'#bbe1fa'}} border='1' align='center'> 
        </table>
       </Dialog>
