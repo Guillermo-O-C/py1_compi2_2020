@@ -4,6 +4,7 @@ import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR, T
 export default function Ejecutar(salida, consola, traduccion, printedTable, tablero){
    // console.log("this is the output"+  JSON.stringify(salida.AST)); 
    let output="";
+   printedTable.erEj=salida.ErrArr;
    const tsGlobal = new TS([], consola);
    try {
         consola.value="";        
@@ -109,13 +110,16 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         }
     }
     function setSalida(Errores){
+        if(Errores.length>0){
+        consola.value+="ALERTA:\nExisten errores, consulta la tabla ade errores para localizarlos.\nNota: Si son errores sintácticos intenta ver las línea superiores para hallar el causante.";
+        return;
+        }
         for(let error of Errores){
             consola.value+="> "+error+"\n";
         }
     }
     function sendTable(tablaDeSimbolos){
         printedTable.tsEj=tablaDeSimbolos;
-        printedTable.erEj=salida.ErrArr;
     }
     function scanForFunctions(instrucciones, tablaDeSimbolos, ambito){
         for(let instruccion of instrucciones){
@@ -615,6 +619,9 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 }*/
                 //comprobar que la posición no sea más larga que el length de la posición.
                 principalValue = principalValue.valor[valor.valor];
+                if(principalValue==undefined){
+                    return {valor:undefined, tipo:"undefined"};
+                }
                 side="both"
             }else if(temp.sentencia==SENTENCIAS.POP){//R
                 side="right";
@@ -998,18 +1005,29 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             }else{
                 let original = procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos, ambito);
                 let caso= procesarExpresionNumerica(cases[i].logica, tablaDeSimbolos, ambito);
+                let returnedAcction;
                 if(original.valor==caso.valor){
                     const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
-                    let returnedAcction = procesarBloque(cases[i].accion, tsFor, ambito);
+                    for(let e =i;e<cases.length;e++){
+                        returnedAcction = procesarBloque(cases[e].accion, tsFor, ambito);
+                        if(returnedAcction!=undefined){
+                            if(returnedAcction.sentencia==SENTENCIAS.BREAK){
+                                break;
+                            }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
+                                continue;
+                            }else{
+                                return returnedAcction;
+                            } 
+                        } 
+                    }
+                    i=cases.length; 
                     if(returnedAcction!=undefined){
                         if(returnedAcction.sentencia==SENTENCIAS.BREAK){
-                            break;
                         }else if(returnedAcction.sentencia==SENTENCIAS.CONTINUE){
-                            continue;
                         }else{
                             return returnedAcction;
                         } 
-                    } 
+                    }                  
                 }
             }
         }

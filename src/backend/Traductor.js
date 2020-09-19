@@ -3,6 +3,7 @@ import { TS, TIPO_DATO, SENTENCIAS, TIPO_VARIABLE, TIPO_OPERACION, TIPO_VALOR, T
 export default function Traducir(salida, consola, traduccion, tablaDeSalida){
    // console.log("this is the output"+  JSON.stringify(salida.AST)); 
    let output="";
+   tablaDeSalida.erTr=salida.ErrArr;
    try {
         consola.value="";
         const tsGlobal = new TS([], consola);
@@ -209,6 +210,8 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             return "(!"+valorIzq+")";
         } else if (expresion.tipo === TIPO_VALOR.NUMERO) {
             return expresion.valor;
+        }else if (expresion.tipo === TIPO_VALOR.DECIMAL) {
+            return expresion.valor;
         }else if (expresion.tipo === TIPO_VALOR.TRUE) {
             return "true";
         } else if (expresion.tipo === TIPO_VALOR.FALSE) {
@@ -345,14 +348,12 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         let temp = instruccion.cases;
         while(temp!="Epsilon"){
             if(temp.logica=="default"){
-                output+="default:{\n";
-                procesarBloque(temp.accion);
-                output+="}";
+                output+="default:\n";
+                procesarBloque(temp.accion, tablaDeSimbolos, ambito);
                 break;
             }else{
-                output+="case "+procesarExpresionNumerica(temp.logica, tablaDeSimbolos)+":{\n";
-                procesarBloque(temp.accion);
-                output+="}";
+                output+="case "+procesarExpresionNumerica(temp.logica, tablaDeSimbolos)+":\n";
+                procesarBloque(temp.accion, tablaDeSimbolos, ambito);
             }
             temp=temp.next_case;
         }
@@ -423,13 +424,17 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         output+="}"+"while("+procesarExpresionNumerica(instruccion.logica, tablaDeSimbolos)+");";
     }
     function procesarReturn(instruccion, tablaDeSimbolos){
-        output+="return "+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+";";
+        if(instruccion.valor=="Epsilon"){
+            output+="return;";
+        }else{
+            output+="return "+procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos)+";";
+        }
     }
     function procesarIncremento(instruccion){
-        output+=instruccion.id+"++;";
+        output+=procesarIdentificador(instruccion.id, tablaDeSalida)+"++;";
     }
     function procesarDecremento(instruccion){
-        output+=instruccion.id+"--;";
+        output+=procesarIdentificador(instruccion.id, tablaDeSalida)+"--;";
     }
     function procesarFuncion(instrucciones, tablaDeSimbolos, ambito){
             let funciones=[];
@@ -476,7 +481,6 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
     }
     function sendTable(tablaDeSimbolos){
         tablaDeSalida.tsTr=tablaDeSimbolos;
-        tablaDeSalida.erTr=salida.ErrArr;
     }
     function procesarParametros(parametros){
         let text="";
