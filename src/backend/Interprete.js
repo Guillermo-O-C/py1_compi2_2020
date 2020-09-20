@@ -309,14 +309,14 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         //Verificar que no exista en el mismo ámbito
         if(ambito=="Global"){
             if(tablaDeSimbolos.existe(id, ambito, "variable")){
-                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
-                throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';
+                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito.';  
+                throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito';
             } 
         }else{
             if(tablaDeSimbolos.existe(id, "Global", "variable")){
                 if(tablaDeSimbolos.existe(id, ambito, "variable")){
-                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior';  
-                throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito o en uno superior'; 
+                consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito.';  
+                throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito'; 
                 }
             }
         }
@@ -680,7 +680,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
     }
     function procesarLlamada(instruccion, tablaDeSimbolos, ambito){
         let funcion = tablaDeSimbolos.obtenerFuncion(instruccion.id);
-        if(ambito==GetAmbito(instruccion.id) || instruccion.id.split("_").length==1){
+        if(ambito==GetAmbito(instruccion.id) || instruccion.id.split("_").length==1 || instruccion.id==ambito){ //la tercera condición es para que acepte las llamadas recursivas de funciones desasinadas
             if (funcion.parametros.length != 0 && instruccion.parametros == "Epsilon") {
                 consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';
                 throw 'ERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';

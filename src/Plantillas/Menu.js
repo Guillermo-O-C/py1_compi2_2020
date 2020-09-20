@@ -32,6 +32,7 @@ import Traducir from '../backend/Traductor';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
 import Ejecutar from '../backend/Interprete';
 import { TIPO_DATO } from '../backend/instrucciones';
+import Tree from 'react-d3-tree';
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -109,7 +110,20 @@ export default function UI() {
   function Interpretar(){
     tablero.innerHTML=document.createElement("div").innerHTML;
     Ejecutar(analizar(intros.entrada), document.getElementById('consola'), intros.salida, reports,  tablero);
-   }
+  }
+  function prs(AST){
+    let temp = {attributes:{} , children:[]};
+    for(let sentencia in AST){
+        if(typeof AST[sentencia] === 'object' && AST[sentencia] !== null){
+          let atb = prs(AST[sentencia]);
+          temp.children.push({name:sentencia,attributes: atb.attributes, children:atb.children});
+          
+        }else{
+          temp.attributes[sentencia]=AST[sentencia];
+        }
+      }
+      return temp;
+  }
   function translationConsole(editor){
     intros.salida=editor;
   }
@@ -206,6 +220,31 @@ export default function UI() {
       }
     }
   }  
+  function toString(simbolo){
+    let text="";
+    if(simbolo.tipo.split("[]")>1){
+      text+="[";
+      for(let i = 0;i<simbolo.valor.length;i++){
+          text+=toString(simbolo.valor[i]);
+          if(i!=simbolo.valor.length-1){
+              text+=", ";
+          }
+      }
+      text+="]";
+    }else if(Array.isArray(simbolo.valor)){
+      text+="{";
+      for(let i = 0;i<simbolo.valor.length;i++){
+        text+=simbolo.valor[i].id+":"+toString(simbolo.valor[i]);
+        if(i!=simbolo.valor.length-1){
+          text+=", ";
+        }
+      }
+      text+="}";
+    }else{
+      text+= simbolo.valor;
+    }
+    return text;
+  }
   function populateTableTsEj(tablaDeSimbolos){
     let tabla = document.createElement("table");
     tabla.bgColor= '#bbe1fa';
@@ -213,14 +252,21 @@ export default function UI() {
     tabla.width="80%";
     tabla.border="1px solid black";
     {/*"width'80%' style= border='1' align='center'";*/}
+    var row1 =  tabla.insertRow( tabla.rows.length);
+    var celda11 = row1.insertCell(0);
+    celda11.innerHTML="Tabla de Símbolos FINAL";
+    celda11.bgColor="#40a8c4";
+    celda11.align="center";
+    celda11.colSpan=8;
     var row0 =  tabla.insertRow( tabla.rows.length);
     var celda01 = row0.insertCell(0);
     var celda02 = row0.insertCell(1);
     var celda03 = row0.insertCell(2);
     var celda04 = row0.insertCell(3);
-    var celda06 = row0.insertCell(4);
-    var celda07 = row0.insertCell(5);
-    var celda08 = row0.insertCell(6);
+    var celda05 = row0.insertCell(4);
+    var celda06 = row0.insertCell(5);
+    var celda07 = row0.insertCell(6);
+    var celda08 = row0.insertCell(7);
     celda01.innerHTML = "No.";
     celda01.bgColor="#40a8c4";
     celda02.innerHTML = "Sentencia";
@@ -229,6 +275,8 @@ export default function UI() {
     celda03.bgColor="#40a8c4";
     celda04.innerHTML = "Tipo";
     celda04.bgColor="#40a8c4";
+    celda05.innerHTML = "Valor";
+    celda05.bgColor="#40a8c4";
     celda06.innerHTML = "Fila";
     celda06.bgColor="#40a8c4";
     celda07.innerHTML = "Columna";
@@ -245,13 +293,15 @@ export default function UI() {
       var celda2 = row.insertCell(1);
       var celda3 = row.insertCell(2);
       var celda4 = row.insertCell(3);
-      var celda6 = row.insertCell(4);
-      var celda7 = row.insertCell(5);
-      var celda8 = row.insertCell(6);
+      var celda5 = row.insertCell(4);
+      var celda6 = row.insertCell(5);
+      var celda7 = row.insertCell(6);
+      var celda8 = row.insertCell(7);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
       celda4.innerHTML = simbolo.tipo;
+      celda5.innerHTML = toString(simbolo);
       celda6.innerHTML = simbolo.fila;
       celda7.innerHTML = simbolo.columna;
       celda8.innerHTML = simbolo.ambito;
@@ -261,9 +311,10 @@ export default function UI() {
       var celda2 = row.insertCell(1);
       var celda3 = row.insertCell(2);
       var celda4 = row.insertCell(3);
-      var celda6 = row.insertCell(4);
-      var celda7 = row.insertCell(5);
-      var celda8 = row.insertCell(6);
+      var celda5 = row.insertCell(4);
+      var celda6 = row.insertCell(5);
+      var celda7 = row.insertCell(6);
+      var celda8 = row.insertCell(7);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
@@ -280,11 +331,12 @@ export default function UI() {
       var celda5 = row.insertCell(4);
       var celda6 = row.insertCell(5);
       var celda7 = row.insertCell(6);
+      var celda8 = row.insertCell(8);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
-      celda5.innerHTML = simbolo.fila;
-      celda6.innerHTML = simbolo.columna;
+      celda6.innerHTML = simbolo.fila;
+      celda7.innerHTML = simbolo.columna;
     }
     }
   }
@@ -353,9 +405,11 @@ export default function UI() {
    async function handleClickOpenAST (){
     setOpen(true);
     await setTimeout(null, 300);
+    document.getElementById('AST_FRAME').style.display="block";
    };
   const handleClose = () => {
     setOpen(false);
+    document.getElementById('AST_FRAME').style.display="none";
    };
 
   return (
@@ -482,11 +536,13 @@ export default function UI() {
               <CloseIcon />
             </IconButton>
             <Typography variant="h6" className={classes.title}>
-              Tabla de Símbolos
+              REPORTES
             </Typography>
           </Toolbar>
         </AppBar>
-        <div id="AST_FRAME"></div>
+        <div id="AST_FRAME" style={{width: '1920px', height: '1000px'}}>
+        <Tree data={{name:"AST",children:prs(intros.AST.AST).children}} />
+        </div>
         <div id="tablero"></div>
        <table id="tablaDeSalida" width="80%" style={{background:'#bbe1fa'}} border='1' align='center'> 
        </table>
