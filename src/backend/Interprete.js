@@ -284,7 +284,11 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         }else if(tablaDeSimbolos.existe(cadena.tipo, undefined, "type")){
             text+="{";
             for(let i = 0;i<cadena.valor.length;i++){
-                text+=cadena.valor[i].id+":"+toString(cadena.valor[i].valor, tablaDeSimbolos, ambito);
+                if(cadena.valor[i].valor.valor!=null){
+                    text+=cadena.valor[i].id+":"+toString(cadena.valor[i].valor, tablaDeSimbolos, ambito);
+                }else{
+                    text+=cadena.valor[i].id+":null";
+                }
                 if(i!=cadena.valor.length-1){
                     text+=", ";
                 }
@@ -542,15 +546,19 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                         if(!flag2){
                             flag=false;
                             break;
+                        }else{
+                            //para que lleve muestre la coincidencia de type y objeto
+                            flag=true;
                         }       
                     }
                     if(flag){
                         typeID=type.id;
                         break;
-                    }else{
+                    }//SE quita la cláusula else para que revise todos los types existentes;
+                    /*else{
                         consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No existe ningún type que coincida con el objeto.\n';  
                         throw '>ERROR: No existe ningún type que coincida con el objeto.\n';                       
-                    } 
+                    } */
                 }
                 
             }
@@ -679,7 +687,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
         return er;
     }
     function procesarLlamada(instruccion, tablaDeSimbolos, ambito){
-        let funcion = tablaDeSimbolos.obtenerFuncion(instruccion.id);
+        let funcion = tablaDeSimbolos.obtenerFuncion(instruccion.id, instruccion.fila, instruccion.columna, ambito);
         if(ambito==GetAmbito(instruccion.id) || instruccion.id.split("_").length==1 || instruccion.id==ambito){ //la tercera condición es para que acepte las llamadas recursivas de funciones desasinadas
             if (funcion.parametros.length != 0 && instruccion.parametros == "Epsilon") {
                 consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados.';

@@ -239,7 +239,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         }
     }
     function procesarLLamada(llamada, tablaDeSimbolos){
-        let text=tablaDeSimbolos.changeOldIDCall(llamada.id)+"(";
+        let text=tablaDeSimbolos.changeOldIDCall(llamada.id, llamada.fila, llamada.columna)+"(";
         text+=procesarArgumentos(llamada.parametros, tablaDeSimbolos);
         text+=")";
         return text;
@@ -463,9 +463,9 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
             if(instruccion.sentencia==SENTENCIAS.FUNCION){
                 tablaDeSimbolos.agregarFuncion(instruccion.id, instruccion.tipo, null, null, ambito, instruccion.fila, instruccion.columna);
                 if(ambito!="Global"){
-                    tablaDeSimbolos.updateFuncionID(instruccion.id, ambito+"_"+instruccion.id);
+                    tablaDeSimbolos.updateFuncionID(instruccion.id, ambito+"_"+instruccion.id, instruccion.fila, instruccion.columna);
                 }else{
-                    tablaDeSimbolos.updateFuncionID(instruccion.id, instruccion.id);                    
+                    tablaDeSimbolos.updateFuncionID(instruccion.id, instruccion.id, instruccion.fila, instruccion.columna);                    
                 }
                 instruccion.id=(ambito=="Global")?instruccion.id:ambito+"_"+instruccion.id;
                 scanForFunctions(instruccion.accion, tablaDeSimbolos, instruccion.id);

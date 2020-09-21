@@ -86,6 +86,7 @@ const useStyles = makeStyles((theme) => ({
 const reports = {tsTr:[], erTr:[], tsEj:[], erEj:[]};
 const intros = {AST:[], entrada:"", salida:""};
 const tablero = document.createElement("div");
+var data;
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -218,11 +219,15 @@ export default function UI() {
         celda5.innerHTML = err.descripcion;
         i++;
       }
+    }else{
+      var row0 =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var celda01 = row0.insertCell(0);
+      celda01.innerHTML = "No se detectaron herrores en la traducción.";
     }
   }  
   function toString(simbolo){
     let text="";
-    if(simbolo.tipo.split("[]")>1){
+    if(simbolo.tipo.split("[]").length>1){
       text+="[";
       for(let i = 0;i<simbolo.valor.length;i++){
           text+=toString(simbolo.valor[i]);
@@ -234,7 +239,11 @@ export default function UI() {
     }else if(Array.isArray(simbolo.valor)){
       text+="{";
       for(let i = 0;i<simbolo.valor.length;i++){
-        text+=simbolo.valor[i].id+":"+toString(simbolo.valor[i]);
+        if(simbolo.valor[i].valor.valor!=null){
+          text+=simbolo.valor[i].id+":"+toString(simbolo.valor[i].valor);
+        }else{
+          text+=simbolo.valor[i].id+":null";
+        }
         if(i!=simbolo.valor.length-1){
           text+=", ";
         }
@@ -331,7 +340,7 @@ export default function UI() {
       var celda5 = row.insertCell(4);
       var celda6 = row.insertCell(5);
       var celda7 = row.insertCell(6);
-      var celda8 = row.insertCell(8);
+      var celda8 = row.insertCell(7);
       celda1.innerHTML = i;
       celda2.innerHTML = simbolo.si;
       celda3.innerHTML = simbolo.id;
@@ -372,6 +381,10 @@ export default function UI() {
         celda5.innerHTML = err.descripción;
         i++;
       }
+    }else{
+      var row0 =  document.getElementById('tablaDeSalida').insertRow( document.getElementById('tablaDeSalida').rows.length);
+      var celda01 = row0.insertCell(0);
+      celda01.innerHTML = "No se detectaron herrores en la Ejecución.";
     }
   }
   const classes = useStyles();
@@ -382,32 +395,42 @@ export default function UI() {
     populateTable(reports.tsTr);
    };*/
    async function handleClickOpenTsTr (){
+    data={};
     setOpen(true);
     await setTimeout(null, 300);
+    document.getElementById('AST_FRAME').style.display="none";
     populateTableTsTr(reports.tsTr);
    };
    async function handleClickOpenErTr (){
+    data={};
     setOpen(true);
     await setTimeout(null, 300);
+    document.getElementById('AST_FRAME').style.display="none";
     populateTableErTr(reports.erTr);
    };
    async function handleClickOpenTsEj (){
+    data={};
     setOpen(true);
     await setTimeout(null, 300);
+    document.getElementById('AST_FRAME').style.display="none";
     document.getElementById('tablero').innerHTML=tablero.innerHTML;
     document.getElementById('tablero').appendChild(populateTableTsEj(reports.tsEj));
    };
    async function handleClickOpenErEj (){
+    data={};
     setOpen(true);
     await setTimeout(null, 300);
+    document.getElementById('AST_FRAME').style.display="none";
     populateTableErEj(reports.erEj);
    };
    async function handleClickOpenAST (){
+    data={name:"AST",children:prs(intros.AST.AST).children};
     setOpen(true);
     await setTimeout(null, 300);
     document.getElementById('AST_FRAME').style.display="block";
    };
   const handleClose = () => {
+    data={};
     setOpen(false);
     document.getElementById('AST_FRAME').style.display="none";
    };
@@ -541,7 +564,7 @@ export default function UI() {
           </Toolbar>
         </AppBar>
         <div id="AST_FRAME" style={{width: '1920px', height: '1000px'}}>
-        <Tree data={{name:"AST",children:prs(intros.AST.AST).children}} />
+        <Tree data={data} zoomable={true} orientation={"vertical"} />
         </div>
         <div id="tablero"></div>
        <table id="tablaDeSalida" width="80%" style={{background:'#bbe1fa'}} border='1' align='center'> 

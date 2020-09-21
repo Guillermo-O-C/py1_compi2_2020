@@ -213,33 +213,33 @@ class TS {
         if (simbolo) return simbolo;
         else{ this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
     }
-    obtenerFuncion(id, ambito) {
+    obtenerFuncion(id, fila, columna, ambito) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="funcion")[0];
         if (funcion){ 
                 return { tipo: funcion.tipo, parametros: funcion.parametros, accion: funcion.accion };
             }
-        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
+        else {this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
     obtenerType(id) {
         const type = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="type")[0];
         if (type) return { atributos:type.atributos };
         else {this._consola.value+='ERROR: no existe ningun type llamado: ' + id + '.'; throw 'ERROR: no existe ningun type llamado: ' + id + '.';}
     }
-    updateFuncionID(id,  newID) {
+    updateFuncionID(id,  newID, fila, columna) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id)[0];
         if (funcion) {
             funcion.oldID=funcion.id;
             funcion.id=newID;
             return true;
         }
-        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
+        else {this._consola.value+='f:'+fila+', c:'+columna+'\nERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
-    changeOldIDCall(id){
+    changeOldIDCall(id, fila, columna){
         const funcion = this._simbolos.filter(simbolo => simbolo.oldID === id && simbolo.si=="funcion")[0];
         if (funcion) {
             return funcion.id;
         }
-        else {this._consola.value+='ERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
+        else {this._consola.value+='f:'+fila+', c:'+columna+'\nERROR: no existe ninguna función llamada: ' + id + '.'; throw 'ERROR: no existe ninguna función llamada: ' + id + '.';}
     }
     existe(id, ambito, si) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito && si==simbolo.si)[0];
