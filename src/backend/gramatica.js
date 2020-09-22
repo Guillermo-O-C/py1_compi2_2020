@@ -232,7 +232,7 @@ case 66:
  this.$ = instruccionesAPI.nuevoValor(Number($$[$0]), TIPO_VALOR.DECIMAL); 
 break;
 case 67:
- this.$ = instruccionesAPI.nuevaLlamada($$[$0-3], $$[$0-1]); 
+ this.$ = instruccionesAPI.nuevaLlamada($$[$0-3], $$[$0-1], _$[$0-3].first_column, _$[$0-3].first_line); 
 break;
 case 68:
  this.$ = instruccionesAPI.nuevoValor($$[$0], TIPO_VALOR.TRUE); 

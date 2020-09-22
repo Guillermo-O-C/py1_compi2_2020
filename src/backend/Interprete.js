@@ -7,9 +7,10 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
    printedTable.erEj=salida.ErrArr;
    const tsGlobal = new TS([], consola);
    try {
-        consola.value="";        
+        consola.value="";
+        setSalida(salida.Errores);       
+        scanForTypes(salida.AST, tsGlobal); 
         scanForFunctions(salida.AST, tsGlobal, "Global");
-        scanForTypes(salida.AST, tsGlobal);
         let returnedAcction =  procesarBloque(salida.AST, tsGlobal, "Global");
         if(returnedAcction!=undefined){
             if(returnedAcction.sentencia===SENTENCIAS.BREAK){
@@ -24,7 +25,6 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             }
         }
         traduccion.setValue(output);
-        setSalida(salida.Errores);
         console.log(tsGlobal);
         sendTable(tsGlobal);
     } catch (e) {
@@ -111,7 +111,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
     }
     function setSalida(Errores){
         if(Errores.length>0){
-        consola.value+="ALERTA:\nExisten errores, consulta la tabla ade errores para localizarlos.\nNota: Si son errores sintácticos intenta ver las línea superiores para hallar el causante.";
+        consola.value+="ALERTA:\nExisten errores, consulta la tabla de errores para localizarlos.\nNota: Si son errores sintácticos intenta ver las línea superiores para hallar el causante.\n\n";
         return;
         }
         for(let error of Errores){
@@ -256,8 +256,11 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             principalValue.valor=assignedValue.valor;
             principalValue.tipo=assignedValue.tipo;
         }else{
-            if(principalValue.tipo!=assignedValue.tipo){
-                consola.value+='>f:'+temp.fila+', c:'+temp.columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';  
+            if(assignedValue.valor==null){
+                principalValue.valor=assignedValue.valor;
+                principalValue.tipo=assignedValue.tipo;
+            }else if(principalValue.tipo!=assignedValue.tipo){
+                consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';  
                 throw '>ERROR: Incompatibilidad de tipos: ' + assignedValue.tipo + ' no se puede convertir en ' + principalValue.tipo+'\n';                
             }else{
                 principalValue.valor=assignedValue.valor;
@@ -283,15 +286,19 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             text+="]";
         }else if(tablaDeSimbolos.existe(cadena.tipo, undefined, "type")){
             text+="{";
-            for(let i = 0;i<cadena.valor.length;i++){
-                if(cadena.valor[i].valor.valor!=null){
-                    text+=cadena.valor[i].id+":"+toString(cadena.valor[i].valor, tablaDeSimbolos, ambito);
-                }else{
-                    text+=cadena.valor[i].id+":null";
+            if(cadena.valor!=null){
+                for(let i = 0;i<cadena.valor.length;i++){
+                    if(cadena.valor[i].valor.valor!=null){
+                        text+=cadena.valor[i].id+":"+toString(cadena.valor[i].valor, tablaDeSimbolos, ambito);
+                    }else{
+                        text+=cadena.valor[i].id+":null";
+                    }
+                    if(i!=cadena.valor.length-1){
+                        text+=", ";
+                    }
                 }
-                if(i!=cadena.valor.length-1){
-                    text+=", ";
-                }
+            }else{
+                text+="null";
             }
             text+="}";
         }else if(cadena.tipo==="string"){
@@ -370,7 +377,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             if(valorIzq.tipo=="string"){
                 return { valor: valorIzq.valor + toString(valorDer, tablaDeSimbolos, ambito), tipo: "string" };
             }else if(valorDer.tipo=="string"){
-                return { valor: valorDer.valor + toString(valorIzq, tablaDeSimbolos, ambito), tipo: "string" };
+                return { valor:  toString(valorIzq, tablaDeSimbolos, ambito)+ valorDer.valor, tipo: "string"  };
             }else{
                 return { valor: valorIzq.valor + valorDer.valor, tipo: "number" };
             }
@@ -442,7 +449,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             const valIzq=procesarAccID(expresion.valor, tablaDeSimbolos, ambito);
             return {valor:valIzq.valor, side:valIzq.side, tipo:valIzq.tipo};
         } else if (expresion.tipo === TIPO_VALOR.NULL) {
-            return { valor: null, tipo: TIPO_DATO.NULL };
+            return { valor: null, tipo: "undefined" };
         //} else if (expresion.data_type === TIPO_DATO.ARRAY) {
         } else if (expresion.data_type === TIPO_DATO.ARRAY) {
             return procesarArray(expresion, tablaDeSimbolos, ambito);
@@ -605,7 +612,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 for(let attribute of principalValue.valor){
                     if(attribute.id==temp.atributo){
                         principalValue=attribute.valor;
-                        principalValue.tipo=value.tipo;
+                        //se tenía como principalValue.tipo=value.tipo pero cuando los atributos no traen definido el tipo se crea un vacío
+                        if(value.tipo!="infer"){
+                            principalValue.tipo=value.tipo;
+                        }else{
+                            principalValue.tipo=attribute.tipo;
+                        }                        
                     }
                 }
                 side="both";
@@ -724,6 +736,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                     if(returnedAcction.sentencia===SENTENCIAS.RETURN){
                         if(returnedAcction.valor=="undefined" && funcion.tipo=="void"){
                             //todo bien
+                        }else if(tablaDeSimbolos.existe(instruccion.id, undefined, "type") && returnedAcction.valor.valor==null){
+                            //función de un type no nativo devulve null
                         }else if(returnedAcction.valor.tipo!=funcion.tipo){
                             consola.value+='>ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.';  
                             throw '>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.'; 
@@ -763,30 +777,33 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
     }
     function procesarUnicambios(instruccion, tablaDeSimbolos, ambito){
         let principalValue=getPrincipalValue(instruccion, tablaDeSimbolos, ambito);
-        if(principalValue.tipo!="number"){
-            consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';  
-            throw '>ERROR: Incompatibilidad de tipos: number no se puede convertir en ' + principalValue.tipo+'\n';    
-        }else if(instruccion.sentencia==SENTENCIAS.INCREMENTO){
-            principalValue.valor++;
-        }else if(instruccion.sentencia==SENTENCIAS.DECREMENTO){
-            principalValue.valor--;
-        }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_SUMA){
-            let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
-            if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
-                principalValue.valor+=valor.valor;
-            }else{
-                consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
-                throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
+        if(principalValue.tipo=="number" || principalValue.tipo=="string"){
+            if(instruccion.sentencia==SENTENCIAS.INCREMENTO){
+                principalValue.valor++;
+            }else if(instruccion.sentencia==SENTENCIAS.DECREMENTO){
+                principalValue.valor--;
+            }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_SUMA){
+                let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
+                if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
+                    principalValue.valor+=valor.valor;
+                }else{
+                    consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                    throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
+                }
+            }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_RESTA){
+                let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
+                if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
+                    principalValue.valor+=valor.valor;
+                }else{
+                    consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
+                    throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
+                }        
             }
-        }else if(instruccion.sentencia==SENTENCIAS.ASIGNACION_RESTA){
-            let valor = procesarExpresionNumerica(instruccion.valor, tablaDeSimbolos, ambito);
-            if(valor.tipo == "string" ||valor.tipo == "number" ||valor.tipo == "boolean"){
-                principalValue.valor+=valor.valor;
-            }else{
-                consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';  
-                throw '>ERROR: No se puede hacer una adicción del tipo ' + valor.tipo+'\n';                    
-            }        
+        }else{
+            consola.value+='>f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\nERROR: No se puede usar el operador += con el tipo de dato: ' + principalValue.tipo+'\n';  
+            throw '>ERROR: Incompatibilidad de tipos: No se puede usar el operador += con el tipo de dato: ' + principalValue.tipo+'\n'; 
         }
+        
     }
     function getPrincipalValue(instruccion, tablaDeSimbolos,ambito){
         let principalValue = tablaDeSimbolos.getSimbol(instruccion.id.id, SplitAmbitos(ambito), instruccion.fila, instruccion.columna);
