@@ -82,7 +82,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
                 procesarDecremento(instruccion);
                 output+="\n";
             }else if(instruccion.sentencia === SENTENCIAS.ACCESO){
-                procesarIdentificador(instruccion.id, tablaDeSimbolos);
+                output+=procesarIdentificador(instruccion.id, tablaDeSimbolos)+";\n";
             }else if(instruccion.sentencia === SENTENCIAS.FUNCION){
                 procesarFuncion(instruccion, tablaDeSimbolos, ambito);
             }else if(instruccion.sentencia === SENTENCIAS.GRAFICAR_TS){

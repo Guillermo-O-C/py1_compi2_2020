@@ -296,6 +296,7 @@ type_atributos
 ;
 type_atributos_pr
 	: COMA type_atributos {$$=$2;}
+	| PUNTO_COMA type_atributos {$$=$2;}
 	| {$$="Epsilon";}
 ;
 elseIf

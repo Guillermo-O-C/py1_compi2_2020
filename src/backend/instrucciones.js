@@ -243,8 +243,8 @@ class TS {
     }
     existe(id, ambito, si) {
         const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito == simbolo.ambito && si==simbolo.si)[0];
-        if (simbolo) return true;
-        else return false;
+        if (simbolo){ return true;}
+        else {return false;}
     }
 
     get simbolos() {

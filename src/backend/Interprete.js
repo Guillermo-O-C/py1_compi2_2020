@@ -126,13 +126,19 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 if(instruccion.sentencia==SENTENCIAS.FUNCION){
                     if(ambito=="Global"){ 
                             if(tablaDeSimbolos.existe(instruccion.id, ambito, "funcion")){
-                                consola.value+='>ERROR: No se soporta la sobrecarga de funciones, id repetido :'+instruccion.id;  
+                                consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+'\n>ERROR: No se soporta la sobrecarga de funciones, id repetido :'+instruccion.id;  
                                 throw '>ERROR: No se soporta la sobrecarga de funciones, id repetido :'+instruccion.id;
                             }  
+                            let dataType = procesarDataType(instruccion.tipo);
+                            console.log(tablaDeSimbolos.existe(dataType.split("[]")[0], undefined, "type"));
+                            if(tablaDeSimbolos.existe(dataType.split("[]")[0], undefined, "type")==false && dataType.split("[]")[0]!="number" && dataType.split("[]")[0]!="string"&& dataType.split("[]")[0]!="void" && dataType.split("[]")[0]!="boolean"){
+                                consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+'\n>ERROR: Type '+dataType.split("[]")[0]+' no ha sido definido y es el tipo de retorno de la función:'+instruccion.id;  
+                                throw '>ERROR: Type '+dataType.split("[]")[0]+' no ha sido definido y es el tipo de retorno de la función:'+instruccion.id;  
+                            }
                             tablaDeSimbolos.agregarFuncion(instruccion.id, procesarDataType(instruccion.tipo), procesarParametros(instruccion.parametros), instruccion.accion, ambito, instruccion.fila, instruccion.columna);
                             scanForFunctions(instruccion.accion, tablaDeSimbolos, instruccion.id);
                     }else{      
-                        consola.value+='>ERROR: Funciones anidadas en la función:'+ambito;  
+                        consola.value+='f:'+instruccion.fila+', c:'+instruccion.columna+'\n>ERROR: Funciones anidadas en la función:'+ambito;  
                         throw '>ERROR: Funciones anidadas en la función:'+ambito;
                     } 
                 }  
@@ -540,7 +546,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                         let flag2=true;
                         for(let atb of type.atributos){
                             //para que acepte los null;
-                            if(atb.id==attribute.id && atb.tipo==attribute.tipo || atb.id==attribute.id && atb.tipo=="infer" || atb.id==attribute.id && attribute.valor.valor==null){
+                            if(atb.id==attribute.id && atb.tipo==attribute.tipo || atb.id==attribute.id && atb.tipo=="infer" || atb.id==attribute.id && attribute.valor.valor==null || atb.id==attribute.id && attribute.valor.tipo.split("[]")[0]=="undefined" && atb.tipo.split("[]").length>1){
                                 if(attribute.valor.valor==null){
                                     attribute.tipo=atb.tipo;
                                 }
