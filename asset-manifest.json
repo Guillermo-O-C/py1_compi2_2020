@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/py1_compi2_2020/static/css/main.5f361e03.chunk.css",
-    "main.js": "/py1_compi2_2020/static/js/main.33d05a0f.chunk.js",
-    "main.js.map": "/py1_compi2_2020/static/js/main.33d05a0f.chunk.js.map",
+    "main.js": "/py1_compi2_2020/static/js/main.c4ee3757.chunk.js",
+    "main.js.map": "/py1_compi2_2020/static/js/main.c4ee3757.chunk.js.map",
     "runtime-main.js": "/py1_compi2_2020/static/js/runtime-main.7966ff79.js",
     "runtime-main.js.map": "/py1_compi2_2020/static/js/runtime-main.7966ff79.js.map",
     "static/css/2.76e7acc1.chunk.css": "/py1_compi2_2020/static/css/2.76e7acc1.chunk.css",
     "static/js/2.d7d38a70.chunk.js": "/py1_compi2_2020/static/js/2.d7d38a70.chunk.js",
     "static/js/2.d7d38a70.chunk.js.map": "/py1_compi2_2020/static/js/2.d7d38a70.chunk.js.map",
     "index.html": "/py1_compi2_2020/index.html",
-    "precache-manifest.ea2ae4aeb103a24884268e1036a8123f.js": "/py1_compi2_2020/precache-manifest.ea2ae4aeb103a24884268e1036a8123f.js",
+    "precache-manifest.526c0b52e0c3fb0fc9c920382d6e156e.js": "/py1_compi2_2020/precache-manifest.526c0b52e0c3fb0fc9c920382d6e156e.js",
     "service-worker.js": "/py1_compi2_2020/service-worker.js",
     "static/css/2.76e7acc1.chunk.css.map": "/py1_compi2_2020/static/css/2.76e7acc1.chunk.css.map",
     "static/css/main.5f361e03.chunk.css.map": "/py1_compi2_2020/static/css/main.5f361e03.chunk.css.map",
@@ -21,6 +21,6 @@
     "static/css/2.76e7acc1.chunk.css",
     "static/js/2.d7d38a70.chunk.js",
     "static/css/main.5f361e03.chunk.css",
-    "static/js/main.33d05a0f.chunk.js"
+    "static/js/main.c4ee3757.chunk.js"
   ]
 }
