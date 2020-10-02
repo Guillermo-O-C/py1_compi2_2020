@@ -330,12 +330,12 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito';
             } 
         }else{
-            if(tablaDeSimbolos.existe(id, "Global", "variable")){
+          //  if(tablaDeSimbolos.existe(id, "Global", "variable")){
                 if(tablaDeSimbolos.existe(id, ambito, "variable")){
                 consola.value+='>f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito.';  
                 throw '>ERROR: El identificador:\"'+id+'\" ya ha sido declarado en este ámbito'; 
                 }
-            }
+          //  }
         }
         
         //Ver que el tipo de símbolo sea el correcto con el del valor o undefined
