@@ -209,9 +209,12 @@ class TS {
         throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
     getSimbol(id, ambito, fila, columna) {
-        const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && ambito.includes(simbolo.ambito) && simbolo.si=="variable")[0];
-        if (simbolo) return simbolo;
-        else{ this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: variable: ' + id + ' no ha sido declarada.'; throw 'ERROR: variable: ' + id + ' no ha sido declarada.';}
+        for(let amb of ambito){
+            const simbolo = this._simbolos.filter(simbolo => simbolo.id === id && amb==simbolo.ambito && simbolo.si=="variable")[0];
+            if (simbolo) return simbolo;
+        }
+        this._consola.value+='f:'+fila+', c:'+columna+', ambito:'+ambito+'\nERROR: variable: ' + id + ' no ha sido declarada.';
+        throw 'ERROR: variable: ' + id + ' no ha sido declarada.';
     }
     obtenerFuncion(id, fila, columna, ambito) {
         const funcion = this._simbolos.filter(simbolo => simbolo.id === id && simbolo.si=="funcion")[0];

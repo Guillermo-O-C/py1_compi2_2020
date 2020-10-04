@@ -315,8 +315,8 @@ cases
 	| {$$="Epsilon";}
 ;
 for_init	
-	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $5, "Epsilon");}
-	| IDENTIFICADOR IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3);} 
+	: R_LET IDENTIFICADOR definicion_tipo IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaDeclaracion($1, $2, $3, $5, "Epsilon", @2.first_line, @2.first_column);}
+	| id IGUAL expresion PUNTO_COMA {$$ = instruccionesAPI.nuevaAsignacion($1, $3, @1.first_column, @1.first_line);} 
 ;
 for_change
 	: INCREMENTO {$$=$1;}

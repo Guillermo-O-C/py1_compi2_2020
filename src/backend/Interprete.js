@@ -716,12 +716,19 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
             }else{
                 let argumentos = getArguments(instruccion.parametros, tablaDeSimbolos, ambito);
                 const tsFuncion = new TS(tsGlobal.simbolos.slice(), consola);
+                const tsTemp = new TS(tablaDeSimbolos.simbolos.slice(), consola);
                 for(let i = 0; i < funcion.parametros.length;i++){
                     if(funcion.parametros[i].tipo=="infer" || funcion.parametros[i].tipo==argumentos[i].tipo){
                         //se acepta el argumento para ser usado por los parámetros
+                        tsTemp.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
+                        tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
+                    }else if(argumentos[i].tipo.split("[]")[0]=="undefined" && funcion.parametros[i].tipo==getType(argumentos[i].valor)+calcularDimensiones(argumentos[i].valor)){
+                        //se acepta el argumento para ser usado por los parámetros
+                        tsTemp.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                         tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, argumentos[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                     }else if(tablaDeSimbolos.existe(funcion.parametros[i].tipo, undefined, "type") && argumentos[i].valor==null){
                         //para que acepte los nulls    
+                        tsTemp.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, funcion.parametros[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                         tsFuncion.agregar(TIPO_VARIABLE.LET, funcion.parametros[i].id, funcion.parametros[i].tipo, argumentos[i].valor, instruccion.id, "temp", "temp");
                     }else{
                         consola.value+='ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n La función ' + instruccion.id + ' no puede ser ejecutado con los parámetros dados, error de tipos.';
@@ -730,7 +737,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 }               
                 let returnedAcction;
                 if(instruccion.id.split("_").length>1){
-                    returnedAcction = procesarBloque(funcion.accion, tablaDeSimbolos, instruccion.id);
+                    returnedAcction = procesarBloque(funcion.accion, tsTemp, instruccion.id);
                 }else{
                     returnedAcction = procesarBloque(funcion.accion, tsFuncion, instruccion.id);
                 }
@@ -744,6 +751,8 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                             //todo bien
                         }else if(tablaDeSimbolos.existe(instruccion.id, undefined, "type") && returnedAcction.valor.valor==null){
                             //función de un type no nativo devulve null
+                        }else if(returnedAcction.valor.tipo.split("[]")[0]=="undefined" && funcion.tipo==getType(returnedAcction.valor.valor)+calcularDimensiones(returnedAcction.valor.valor)){
+                            //todo bien
                         }else if(returnedAcction.valor.tipo!=funcion.tipo){
                             consola.value+='>ERROR:f:'+instruccion.fila+', c:'+instruccion.columna+', ambito:'+ambito+'\n No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.';  
                             throw '>ERROR: No se puede asignar '+returnedAcction.valor.tipo+' a '+funcion.tipo+'.'; 
@@ -900,11 +909,11 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
     }
     function procesarFor(instruccion, tablaDeSimbolos, ambito) {
         procesarBloque([instruccion.inicial], tablaDeSimbolos, ambito);
-       // const valor = procesarExpresionCadena(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
+        let instruccionID = instruccion.inicial.sentencia==SENTENCIAS.ASIGNACION?instruccion.inicial.id.id:instruccion.inicial.id;
         const valor = procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos, ambito);
-        tablaDeSimbolos.actualizar(instruccion.inicial.id, valor);//, SplitAmbitos(ambito)
+        tablaDeSimbolos.actualizar(instruccionID, valor);//, SplitAmbitos(ambito)
         if (instruccion.paso.paso == "++") {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).valor) + 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccionID, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)).valor) + 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)).tipo })) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
                 let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
                 if(returnedAcction!=undefined){
@@ -918,7 +927,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 }                
             }
         } else if (instruccion.paso.paso == "--") {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).valor) - 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccionID, { valor: Number(tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)).valor) - 1, tipo: tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)).tipo })) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
                 let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
                 if(returnedAcction!=undefined){
@@ -930,7 +939,7 @@ export default function Ejecutar(salida, consola, traduccion, printedTable, tabl
                 }
             }
         } else {
-            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccion.inicial.id, { valor: Number(procesarExpresionNumerica(instruccion.paso.paso, tablaDeSimbolos, ambito).valor), tipo: tablaDeSimbolos.obtenerSimbolo(instruccion.inicial.id, SplitAmbitos(ambito)).tipo })) {
+            for (var i = tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)); procesarExpresionNumerica(instruccion.final, tablaDeSimbolos, ambito).valor; tablaDeSimbolos.actualizar(instruccionID, { valor: Number(procesarExpresionNumerica(instruccion.paso.paso, tablaDeSimbolos, ambito).valor), tipo: tablaDeSimbolos.obtenerSimbolo(instruccionID, SplitAmbitos(ambito)).tipo })) {
                 const tsFor = new TS(tablaDeSimbolos.simbolos.slice(), consola); 
                 let returnedAcction =  procesarBloque(instruccion.accion, tsFor, ambito);
                 if(returnedAcction!=undefined){

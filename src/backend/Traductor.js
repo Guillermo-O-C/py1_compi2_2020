@@ -385,7 +385,7 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
     function procesarFor(instruccion, tablaDeSimbolos, ambito){
         output+="for(";
         if(instruccion.inicial.sentencia==SENTENCIAS.ASIGNACION){
-            output+=instruccion.inicial.id+"="+procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos);
+            output+=procesarIdentificador(instruccion.inicial.id)+"="+procesarExpresionNumerica(instruccion.inicial.expresion, tablaDeSimbolos)+";";
         }else if(instruccion.inicial.sentencia==SENTENCIAS.DECLARACION){
             procesarDeclaracion(instruccion.inicial, tablaDeSimbolos, ambito);
         }
@@ -404,12 +404,12 @@ export default function Traducir(salida, consola, traduccion, tablaDeSalida){
         output+=procesarIdentificador(instruccion.id, tablaDeSimbolos)+"="+procesarExpresionNumerica(instruccion.expresion, tablaDeSimbolos)+";";
     }
     function procecsarForOf(instruccion, tablaDeSimbolos, ambito){
-        output+="for(let "+instruccion.variable+" of "+instruccion.conjunto+"){\n";
+        output+="for(let "+instruccion.variable+" of "+procesarIdentificador(instruccion.conjunto)+"){\n";
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
         output+="}";
     }
     function procesarForIn(instruccion, tablaDeSimbolos, ambito){
-        output+="for(let "+instruccion.variable+" in "+instruccion.conjunto+"){\n";
+        output+="for(let "+instruccion.variable+" in "+procesarIdentificador(instruccion.conjunto)+"){\n";
         procesarBloque(instruccion.accion, tablaDeSimbolos, ambito);
         output+="}";
     }
